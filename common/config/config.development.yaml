@@ -1,0 +1,62 @@
+# 阿里云短信服务配置
+SMSServiceConfig:
+  access_key_id: ""
+  access_key_secret: ""
+  sign_name: "阿里云短信"
+  region_id: ""
+  register_template_code: ""
+  reset_pwd_template_code: ""
+  enabled: true
+
+
+
+# JWT 配置
+jwtConfig:
+  secret_key: ""
+  issuer: ""
+  refresh_secret: ""
+  access_token_ttl: 3600000000000   # 1小时
+  refresh_token_ttl: 86400000000000 # 24小时
+  enable_JTI : true                 # 开启JTI
+
+# MySQL 配置
+mySQLConfig:
+  host: "127.0.0.1"
+  port: 3306
+  user: "root"
+  password: "root"
+  database: "doer_userHub"
+  charset: "utf8mb4"
+  parseTime: true
+  loc: "Local"
+  maxOpenConn: 50
+  maxIdleConn: 30
+
+
+# Redis 配置
+redisConfig:
+  address: "127.0.0.1"
+  port: 6379
+  password: "root"
+  db: 0
+  dial_timeout: 5000000000   # 5s
+  read_timeout: 3000000000   # 3s
+  write_timeout: 3000000000  # 3s
+
+# Zap 日志配置
+zapConfig:
+  level: "debug"
+  encoding: "console"
+  output_path: "stdout"
+  error_output: "stderr"
+
+
+# rateLimit 配置
+rateLimitConfig:
+  capacity: 50
+  refill_interval: 1s
+  cleanup_interval: 5m
+  idle_timeout: 10m
+
+server:
+  port: "8080"
