@@ -59,7 +59,7 @@ func main() {
 	setupRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// 6. 启动服务器
-	if err := setupRouter.Run(":8080"); err != nil {
+	if err := setupRouter.Run(":80"); err != nil {
 		zapLogger.Fatal("Failed to run server", zap.Error(err))
 	}
 }
