@@ -5,22 +5,29 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"user_hub/common/code"
+	"user_hub/common/dependencies"
 	"user_hub/common/response"
+	"user_hub/middleware"
 	"user_hub/models/dto"
+	"user_hub/models/enums"
 	service "user_hub/service/profile"
 	"user_hub/userError"
 )
 
 // ProfileController 资料管理控制器
 type ProfileController struct {
-	profileService service.ProfileService // 资料服务实例
+	profileService service.ProfileService           // 资料服务实例
+	jwtUtil        dependencies.JWTUtilityInterface // JWT依赖
 }
 
 // NewProfileController 创建 ProfileController 实例
 // - 输入: profileService 资料服务实例
 // - 输出: *ProfileController 控制器实例
-func NewProfileController(profileService service.ProfileService) *ProfileController {
-	return &ProfileController{profileService: profileService}
+func NewProfileController(profileService service.ProfileService, jwtUtil dependencies.JWTUtilityInterface) *ProfileController {
+	return &ProfileController{
+		profileService: profileService,
+		jwtUtil:        jwtUtil,
+	}
 }
 
 // CreateProfileHandler 处理创建用户资料请求
@@ -33,7 +40,7 @@ func NewProfileController(profileService service.ProfileService) *ProfileControl
 // @Success 200 {object} response.APIResponse[vo.ProfileVO] "资料创建成功"
 // @Failure 400 {object} response.APIResponse[any] "输入参数无效"
 // @Failure 500 {object} response.APIResponse[any] "创建资料失败"
-// @Router /profiles [post]
+// @Router /api/v1/profiles [post]
 func (ctrl *ProfileController) CreateProfileHandler(c *gin.Context) {
 	// 1. 绑定请求数据
 	var createProfileDTO dto.CreateProfileDTO
@@ -64,7 +71,7 @@ func (ctrl *ProfileController) CreateProfileHandler(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse[any] "用户 ID 不能为空"
 // @Failure 404 {object} response.APIResponse[any] "用户资料为空"
 // @Failure 500 {object} response.APIResponse[any] "获取资料失败"
-// @Router /profiles/{userID} [get]
+// @Router /api/v1/profiles/{userID} [get]
 func (ctrl *ProfileController) GetProfileByUserIDHandler(c *gin.Context) {
 	// 1. 获取路径参数
 	userID := c.Param("userID")
@@ -100,7 +107,7 @@ func (ctrl *ProfileController) GetProfileByUserIDHandler(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse[any] "输入参数无效"
 // @Failure 404 {object} response.APIResponse[any] "用户资料不存在"
 // @Failure 500 {object} response.APIResponse[any] "更新资料失败"
-// @Router /profiles/{userID} [put]
+// @Router /api/v1/profiles/{userID} [put]
 func (ctrl *ProfileController) UpdateProfileHandler(c *gin.Context) {
 	// 1. 获取路径参数
 	userID := c.Param("userID")
@@ -142,7 +149,7 @@ func (ctrl *ProfileController) UpdateProfileHandler(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse[any] "用户 ID 不能为空"
 // @Failure 404 {object} response.APIResponse[any] "用户资料不存在"
 // @Failure 500 {object} response.APIResponse[any] "删除资料失败"
-// @Router /profiles/{userID} [delete]
+// @Router /api/v1/profiles/{userID} [delete]
 func (ctrl *ProfileController) DeleteProfileHandler(c *gin.Context) {
 	// 1. 获取路径参数
 	userID := c.Param("userID")
@@ -164,4 +171,40 @@ func (ctrl *ProfileController) DeleteProfileHandler(c *gin.Context) {
 
 	// 3. 返回成功响应
 	response.RespondSuccess[interface{}](c, nil, "资料删除成功")
+}
+
+// RegisterRoutes 注册 ProfileController 的路由
+// 该方法将所有与用户资料管理相关的路由注册到指定的路由组中
+// - 输入: group *gin.RouterGroup，路由组实例，用于注册路由
+// - 意图: 为每个资料管理路由添加认证和权限中间件，确保只有认证后的管理员或用户可以访问
+func (ctrl *ProfileController) RegisterRoutes(group *gin.RouterGroup) {
+	// 第一步：创建 profiles 子路由组
+	// - 意图: 处理用户资料相关的操作（如创建、获取、更新、删除），路径前缀为 /profiles
+	// - 路径: /api/v1/profiles
+	profiles := group.Group("/profiles")
+	{
+		// 第二步：注册创建用户资料路由
+		// - 意图: 允许认证后的管理员或用户创建资料，需要验证令牌并限制为 Admin 或 User 角色
+		// - 方法: POST /api/v1/profiles
+		// - 中间件: AuthMiddleware 验证令牌，PermissionMiddleware 允许 Admin 和 User
+		profiles.POST("", middleware.AuthMiddleware(ctrl.jwtUtil), middleware.PermissionMiddleware(enums.Admin, enums.User), ctrl.CreateProfileHandler)
+
+		// 第三步：注册获取用户资料路由
+		// - 意图: 允许认证后的管理员或用户根据用户 ID 获取资料，需要验证令牌并限制为 Admin 或 User 角色
+		// - 方法: GET /api/v1/profiles/{userID}
+		// - 中间件: AuthMiddleware 验证令牌，PermissionMiddleware 允许 Admin 和 User
+		profiles.GET("/:userID", middleware.AuthMiddleware(ctrl.jwtUtil), middleware.PermissionMiddleware(enums.Admin, enums.User), ctrl.GetProfileByUserIDHandler)
+
+		// 第四步：注册更新用户资料路由
+		// - 意图: 允许认证后的管理员或用户更新资料，需要验证令牌并限制为 Admin 或 User 角色
+		// - 方法: PUT /api/v1/profiles/{userID}
+		// - 中间件: AuthMiddleware 验证令牌，PermissionMiddleware 允许 Admin 和 User
+		profiles.PUT("/:userID", middleware.AuthMiddleware(ctrl.jwtUtil), middleware.PermissionMiddleware(enums.Admin, enums.User), ctrl.UpdateProfileHandler)
+
+		// 第五步：注册删除用户资料路由
+		// - 意图: 允许认证后的管理员或用户删除资料，需要验证令牌并限制为 Admin 或 User 角色
+		// - 方法: DELETE /api/v1/profiles/{userID}
+		// - 中间件: AuthMiddleware 验证令牌，PermissionMiddleware 允许 Admin 和 User
+		profiles.DELETE("/:userID", middleware.AuthMiddleware(ctrl.jwtUtil), middleware.PermissionMiddleware(enums.Admin, enums.User), ctrl.DeleteProfileHandler)
+	}
 }

@@ -5,6 +5,9 @@ import (
 )
 
 const (
+	// RequestTimeout 请求超时时间
+	RequestTimeout = 30 * time.Second
+
 	// 认证令牌和刷新令牌的过期时间
 
 	AccessTokenTTL = 15 * time.Minute // 认证令牌（Access Token）的有效期

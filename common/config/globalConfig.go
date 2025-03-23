@@ -7,4 +7,6 @@ type GlobalConfig struct {
 	ZapConfig       ZapConfig       `mapstructure:"zapConfig" json:"zapConfig" yaml:"zapConfig"`
 	RateLimitConfig RateLimitConfig `mapstructure:"rateLimitConfig" json:"rateLimitConfig" yaml:"rateLimitConfig"`
 	Server          Server          `mapstructure:"server" json:"server" yaml:"server"`
+	WechatConfig    WechatConfig    `mapstructure:"wechatConfig" json:"wechatConfig" yaml:"wechatConfig"`
+	SMSConfig       SMSConfig       `mapstructure:"smsConfig" json:"smsConfig" yaml:"smsConfig"`
 }

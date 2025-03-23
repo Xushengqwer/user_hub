@@ -1,15 +1,3 @@
-# 阿里云短信服务配置
-SMSServiceConfig:
-  access_key_id: ""
-  access_key_secret: ""
-  sign_name: "阿里云短信"
-  region_id: ""
-  register_template_code: ""
-  reset_pwd_template_code: ""
-  enabled: true
-
-
-
 # JWT 配置
 jwtConfig:
   secret_key: ""
@@ -60,3 +48,18 @@ rateLimitConfig:
 
 server:
   port: "8080"
+
+
+# 微信云托管 SMS 配置
+smsConfig:
+  appID: "wx1234567890abcdef"
+  secret: "abcdefghijklmnopqrstuvwxyz1234567890abcd"
+  endpoint: "https://api.weixin.qq.com/sms/send"
+  templateID: "SMS_123456789"
+  env: "prod-abcdef"
+
+
+# 微信小程序配置
+wechatConfig:
+  appID: "wx0987654321fedcba"
+  secret: "0987654321abcdefghijklmnopqrstuvwxyz"

@@ -43,7 +43,7 @@ func NewAuthController(smsClient dependencies.SMSClient, codeRepo redis.CodeRepo
 // @Success 200 {object} response.APIResponse[any] "验证码发送成功"
 // @Failure 400 {object} response.APIResponse[string] "请求参数错误，例如手机号格式不正确"
 // @Failure 500 {object} response.APIResponse[string] "服务器内部错误，例如短信发送失败或 Redis 存储失败"
-// @Router /auth/send-captcha [post]
+// @Router /api/v1/auth/send-captcha [post]
 func (c *AuthController) SendCaptcha(ctx *gin.Context) {
 	// 第一步：解析并验证请求参数
 	// - 从请求体中提取手机号，并通过 DTO 进行验证
@@ -78,4 +78,21 @@ func (c *AuthController) SendCaptcha(ctx *gin.Context) {
 	// 第五步：返回成功响应
 	// - 使用 Message 字段返回成功消息，Data 留空（nil），避免泄露验证码
 	response.RespondSuccess[interface{}](ctx, nil, "验证码发送成功")
+}
+
+// RegisterRoutes 注册 AuthController 的路由
+// 该方法将所有与认证相关的路由注册到指定的路由组中
+// - 输入: group *gin.RouterGroup，路由组实例，用于注册路由
+func (c *AuthController) RegisterRoutes(group *gin.RouterGroup) {
+	// 第一步：创建 auth 子路由组
+	// - 所有认证相关的路由都挂载在 /auth 下
+	auth := group.Group("/auth")
+
+	// 第二步：注册发送验证码路由
+	// - 该路由无需认证，任何用户均可访问
+	// - 方法: POST /api/v1/auth/send-captcha
+	auth.POST("/send-captcha", c.SendCaptcha)
+
+	// 注意：Logout 方法未在此处，因为它在 TokenController 中
+	// 如果后续需要在此添加其他路由（如登录），可以继续扩展
 }

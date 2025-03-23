@@ -49,11 +49,11 @@ func AuthMiddleware(jwtUtil dependencies.JWTUtilityInterface) gin.HandlerFunc {
 
 			// 4. 检查具体错误类型（使用 v5 的错误常量）
 			// - 根据错误类型返回不同的错误码和消息
-			switch parseErr {
-			case jwt.ErrTokenExpired:
+			switch {
+			case errors.Is(parseErr, jwt.ErrTokenExpired):
 				// - 令牌过期错误
 				response.RespondError(c, http.StatusUnauthorized, code.ErrCodeClientAccessTokenExpired, "访问令牌已过期")
-			case jwt.ErrTokenMalformed, jwt.ErrTokenSignatureInvalid, jwt.ErrTokenInvalidClaims:
+			case errors.Is(parseErr, jwt.ErrTokenMalformed), errors.Is(parseErr, jwt.ErrTokenSignatureInvalid), errors.Is(parseErr, jwt.ErrTokenInvalidClaims):
 				// - 令牌无效（格式错误、签名无效或声明无效）
 				response.RespondError(c, http.StatusUnauthorized, code.ErrCodeClientUnauthorized, "无效令牌")
 			default:

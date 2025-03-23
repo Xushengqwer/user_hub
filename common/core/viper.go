@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
+	"strconv"
 	"user_hub/common/config"
 )
 
@@ -29,8 +30,8 @@ func ViperLoadConfig() (*config.GlobalConfig, error) {
 		flag.Parse()
 	}
 
-	// 3. 配置文件路径（暂时使用绝对路径，因为我们启动的工作目录不确定）
-	configFilePath := fmt.Sprintf("E:/doer_hub/common/config/config.%s.yaml", env)
+	// 3. 配置文件路径（使用相对路径加载配置文件）
+	configFilePath := fmt.Sprintf("common/config/config.%s.yaml", env)
 
 	// 4. 给viper设置好——配置文件的路径和类型
 	v.SetConfigFile(configFilePath)
@@ -46,6 +47,35 @@ func ViperLoadConfig() (*config.GlobalConfig, error) {
 	var cfg config.GlobalConfig
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("解析配置到结构体出错: %s \n", err)
+	}
+
+	// 覆盖 MySQL 配置
+	if host := os.Getenv("MY_SQL_HOST"); host != "" {
+		cfg.MySQLConfig.Host = host
+	}
+	if port := os.Getenv("MY_SQL_PORT"); port != "" {
+		if p, err := strconv.Atoi(port); err == nil {
+			cfg.MySQLConfig.Port = p
+		}
+	}
+	if user := os.Getenv("MY_SQL_USER"); user != "" {
+		cfg.MySQLConfig.User = user
+	}
+	if password := os.Getenv("MY_SQL_PASSWORD"); password != "" {
+		cfg.MySQLConfig.Password = password
+	}
+
+	// 覆盖 Redis 配置
+	if address := os.Getenv("REDIS_ADDRESS"); address != "" {
+		cfg.RedisConfig.Address = address
+	}
+	if port := os.Getenv("REDIS_PORT"); port != "" {
+		if p, err := strconv.Atoi(port); err == nil {
+			cfg.RedisConfig.Port = p
+		}
+	}
+	if password := os.Getenv("REDIS_PASSWORD"); password != "" {
+		cfg.RedisConfig.Password = password
 	}
 
 	fmt.Println("配置初始化成功:", cfg)

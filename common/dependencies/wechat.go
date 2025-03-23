@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"user_hub/common/config"
 )
 
 // WechatClient 定义微信客户端接口
@@ -16,24 +17,16 @@ type WechatClient interface {
 	GetSession(ctx context.Context, code string) (openid, sessionKey string, err error)
 }
 
-//	todo 记得要进行配置注入
-
-// WechatConfig 定义微信客户端的配置
-type WechatConfig struct {
-	AppID  string // 小程序的 AppID
-	Secret string // 小程序的 AppSecret
-}
-
 // wechatClient 实现 WechatClient 接口
 type wechatClient struct {
-	config *WechatConfig
+	config *config.WechatConfig
 	client *http.Client
 }
 
 // NewWechatClient 创建微信客户端实例
 // - 输入: config 包含 AppID 和 Secret
 // - 输出: WechatClient 接口实例
-func NewWechatClient(config *WechatConfig) WechatClient {
+func NewWechatClient(config *config.WechatConfig) WechatClient {
 	return &wechatClient{
 		config: config,
 		client: &http.Client{

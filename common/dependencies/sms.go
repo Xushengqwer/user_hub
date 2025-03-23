@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"user_hub/common/config"
 )
 
 //  todo 配置还没弄好，微信云托管SMS  API细节不确定是不是最新的
@@ -21,29 +22,21 @@ type SMSClient interface {
 	SendCode(ctx context.Context, phone string, code string) error
 }
 
-// SMSConfig 定义微信云托管 SMS 客户端的配置
-type SMSConfig struct {
-	AppID      string // 微信云托管的 AppID
-	Secret     string // 微信云托管的 Secret
-	Endpoint   string // SMS 服务 API 端点（如 "https://api.weixin.qq.com/sms/send"）
-	TemplateID string // 短信模板 ID
-	Env        string // 云托管环境 ID（如 "prod-123"）
-}
-
 // smsClient 实现 SMSClient 接口的结构体
 type smsClient struct {
-	config     *SMSConfig   // 微信 SMS 服务配置
-	httpClient *http.Client // HTTP 客户端，用于发送请求
+	config     *config.SMSConfig // 微信 SMS 服务配置
+	httpClient *http.Client      // HTTP 客户端，用于发送请求
 }
 
 // NewSMSClient 创建 SMSClient 实例，通过依赖注入初始化
 // - 输入: config 包含微信云托管 SMS 的配置信息
 // - 输出: SMSClient 接口实例
 // - 注意: 若配置为空，会导致初始化失败，需在调用前校验
-func NewSMSClient(config *SMSConfig) (SMSClient, error) {
+func NewSMSClient(config *config.SMSConfig) (SMSClient, error) {
 	// 1. 校验配置是否有效
 	// - 确保必要字段非空
 	if config == nil || config.AppID == "" || config.Secret == "" || config.Endpoint == "" || config.TemplateID == "" {
+		fmt.Println(config)
 		return nil, fmt.Errorf("SMS 配置无效，缺少必要字段")
 	}
 

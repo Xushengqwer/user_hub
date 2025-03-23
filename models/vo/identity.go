@@ -21,3 +21,11 @@ type IdentityVO struct {
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at" example:"2023-01-01T00:00:00Z"`
 }
+
+type IdentityList struct {
+	Items []*IdentityVO `json:"items"`
+}
+
+type IdentityTypeList struct {
+	Items []enums.IdentityType `json:"items"`
+}

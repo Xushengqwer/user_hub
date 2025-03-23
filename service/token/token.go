@@ -61,6 +61,8 @@ func (t *tokenService) Logout(ctx context.Context, refreshToken string) error {
 	return nil
 }
 
+//  todo  这里没把旧的刷新令牌丢尽黑名单
+
 // RefreshToken 使用刷新令牌续期认证令牌
 func (t *tokenService) RefreshToken(ctx context.Context, refreshToken string) (vo.TokenPair, error) {
 	// 1. 解析 refreshToken，获取自定义声明

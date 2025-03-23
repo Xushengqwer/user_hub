@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"user_hub/common/config"
 	"user_hub/common/core"
+	"user_hub/models/entities"
 
 	"time"
 
@@ -33,7 +34,27 @@ func InitMySQL(cfg *config.MySQLConfig, logger *core.ZapLogger) (*gorm.DB, error
 	}
 
 	// 连接数据库
-	db, err := gorm.Open(mysql.Open(dsn), gormConfig)
+	// 重试逻辑
+	var db *gorm.DB
+	var err error
+	maxRetries := 5
+	retryInterval := 2 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		db, err = gorm.Open(mysql.Open(dsn), gormConfig)
+		if err == nil {
+			// 验证连接是否可用
+			sqlDB, err := db.DB()
+			if err == nil && sqlDB.Ping() == nil {
+				break // 连接成功，跳出重试循环
+			}
+		}
+		logger.Warn("无法连接到 MySQL，尝试重试", zap.Int("retry", i+1), zap.Int("maxRetries", maxRetries), zap.Error(err))
+		if i < maxRetries-1 { // 最后一次失败时不再等待
+			time.Sleep(retryInterval)
+		}
+	}
+
 	if err != nil {
 		logger.Error("无法连接到数据库", zap.Error(err))
 		return nil, fmt.Errorf("无法连接到数据库: %w", err)
@@ -52,7 +73,11 @@ func InitMySQL(cfg *config.MySQLConfig, logger *core.ZapLogger) (*gorm.DB, error
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	// 自动迁移数据库表结构
-	err = db.AutoMigrate()
+	err = db.AutoMigrate(
+		&entities.User{},
+		&entities.UserIdentity{},
+		&entities.UserProfile{},
+	)
 	if err != nil {
 		logger.Error("数据库迁移失败", zap.Error(err))
 		return nil, fmt.Errorf("数据库迁移失败: %w", err)

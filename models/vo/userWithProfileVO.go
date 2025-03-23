@@ -29,3 +29,8 @@ type UserWithProfileVO struct {
 	// 更新时间
 	UpdatedAt time.Time `json:"updated_at" example:"2023-01-01T00:00:00Z"`
 }
+
+type UserListResponse struct {
+	Users []*UserWithProfileVO `json:"users"`
+	Total int64                `json:"total"`
+}
