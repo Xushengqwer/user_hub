@@ -9,11 +9,11 @@ jwtConfig:
 
 # MySQL 配置（默认值，环境变量会覆盖）
 mySQLConfig:
-  host: "127.0.0.1"
+  host: "10.16.104.107"
   port: 3306
   user: "root"
-  password: "root"
-  database: "doer_userHub"
+  password: "xuzhihuo@120"
+  database: "user_hub"
   charset: "utf8mb4"
   parseTime: true
   loc: "Local"
@@ -22,9 +22,9 @@ mySQLConfig:
 
 # Redis 配置（默认值，环境变量会覆盖）
 redisConfig:
-  address: "127.0.0.1"
+  address: "mawhxqew.redis.t9gUc8g.by9y035.com"
   port: 6379
-  password: "root"
+  password: "xuzihuo@120"
   db: 0
   dial_timeout: 5000000000   # 5s
   read_timeout: 3000000000   # 3s
