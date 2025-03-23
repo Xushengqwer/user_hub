@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]  # 当推送代码到 main 分支时触发
+  pull_request:
+    branches: [ main ]  # 当创建或更新 pull request 到 main 分支时触发
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest  # 使用 GitHub 提供的 Ubuntu 虚拟机
+    steps:
+      - uses: actions/checkout@v4  # 检出代码
+        name: Checkout code
+
+      - name: Set up Go
+        uses: actions/setup-go@v5  # 设置 Go 环境
+        with:
+          go-version: '1.23.0'  # 指定 Go 版本（根据你的项目调整）
+
+      # 添加缓存，加速工作流
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod tidy  # 安装依赖
+
+      - name: Build
+        run: go build -v ./...  # 构建项目
+
+      - name: Test
+        run: go test -v ./...  # 运行测试

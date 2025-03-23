@@ -9,6 +9,8 @@ import (
 	"user_hub/common/config"
 )
 
+// todo  目前这里的的代码不优雅，有问题
+
 // 示例   go run main.go --env=production  通过命令行参数运行，加载配置文件：./config/config.production.yaml
 // 示例   ENV=development go run main.go   通过环境变量运行：加载配置文件：./config/config.development.yaml
 // 示例   go run main.go       默认运行： 如果不提供环境变量或命令行参数，默认为 development：加载配置文件：./config/config.development.yaml// ViperLoadConfig 加载配置并返回 GlobalConfig 实例
