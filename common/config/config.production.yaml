@@ -22,7 +22,7 @@ mySQLConfig:
 
 # Redis 配置（默认值，环境变量会覆盖）
 redisConfig:
-  address: "mawhxqew.redis.t9gUc8g.by9y035.com"
+  address: "mawhxqew.redis.lt9g8ugc.b9ly0g35.com"
   port: 6379
   password: "xuzihuo@120"
   db: 0
