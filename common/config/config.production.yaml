@@ -7,9 +7,9 @@ jwtConfig:
   refresh_token_ttl: 86400000000000 # 24小时
   enable_JTI: true
 
-# MySQL 采用的微信云托管自带配置（默认值，环境变量会覆盖）
+# MySQL 采用的微信云托管自建MySQL服务
 mySQLConfig:
-  host: "10.16.104.107"
+  host: "mawhxqew.mysql.lt9g8ugc.b9ly0g35.com"
   port: 3306
   user: "root"
   password: "xuzhihuo@120"

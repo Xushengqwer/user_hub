@@ -23,6 +23,6 @@ type User struct {
 	// 更新时间，默认当前时间戳，自动更新
 	UpdatedAt time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP;autoUpdateTime"`
 
-	// 软删除时间戳，列名为 deleted_at ， 显式指定允许 NULL
-	DeletedAt gorm.DeletedAt `gorm:"type:timestamp;column:deleted_at;default:NULL"`
+	// 软删除时间戳，列名为 deleted_at
+	DeletedAt gorm.DeletedAt `gorm:"type:timestamp;column:deleted_at"`
 }

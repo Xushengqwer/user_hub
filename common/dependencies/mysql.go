@@ -60,13 +60,6 @@ func InitMySQL(cfg *config.MySQLConfig, logger *core.ZapLogger) (*gorm.DB, error
 		return nil, fmt.Errorf("无法连接到数据库: %w", err)
 	}
 
-	// todo  为适应微信云托管的MySQL5.7版本，临时调整 sql_mode,如果部署到其他云厂商可以升级MySQL版本
-	err = db.Exec("SET SESSION sql_mode = 'NO_ENGINE_SUBSTITUTION'").Error
-	if err != nil {
-		logger.Error("无法设置 sql_mode", zap.Error(err))
-		return nil, fmt.Errorf("无法设置 sql_mode: %w", err)
-	}
-
 	// 获取通用数据库对象 sql.DB 以便进行底层操作
 	sqlDB, err := db.DB()
 	if err != nil {
