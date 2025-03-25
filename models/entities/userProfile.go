@@ -8,7 +8,7 @@ import (
 // UserProfile 用户资料信息
 type UserProfile struct {
 	// 关联 User 表的 UserID，外键+级联删除
-	UserID string `gorm:"type:char(36);not null;index;foreignKey:UserID;references:user_id;constraint:OnDelete:CASCADE"`
+	UserID string `gorm:"type:char(36);not null;index;foreignKey:UserID;references:user_id"`
 
 	// 昵称
 	Nickname string `gorm:"type:varchar(255)"`

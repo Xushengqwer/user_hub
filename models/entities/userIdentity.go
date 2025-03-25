@@ -10,8 +10,8 @@ type UserIdentity struct {
 	// 自增主键
 	IdentityID uint `gorm:"primary_key;auto_increment"`
 
-	// 关联 User 表的 UserID，外键+级联删除
-	UserID string `gorm:"type:char(36);not null;index;foreignKey:UserID;references:user_id;constraint:OnDelete:CASCADE"`
+	// 关联 User 表的 UserID，外键
+	UserID string `gorm:"type:char(36);not null;index;foreignKey:UserID;references:user_id"`
 
 	// 身份类型（0=账号密码, 1=小程序, 2=手机号）
 	IdentityType enums.IdentityType `gorm:"type:int;not null"`
