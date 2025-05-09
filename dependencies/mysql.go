@@ -9,8 +9,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	"user_hub/config"
-	"user_hub/models/entities"
+	"github.com/Xushengqwer/user_hub/config"
+	"github.com/Xushengqwer/user_hub/models/entities"
 )
 
 // InitMySQL 初始化 MySQL 连接并返回 *gorm.DB

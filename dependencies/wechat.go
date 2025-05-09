@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt" // 引入 fmt 包用于错误包装
-	"io"  // 引入 io 包读取响应体
+	"github.com/Xushengqwer/user_hub/config"
+	"io" // 引入 io 包读取响应体
 	"net/http"
 	"time"
-	"user_hub/config"
 )
 
 // WechatClient 定义了与微信小程序服务端 API 交互的客户端接口。

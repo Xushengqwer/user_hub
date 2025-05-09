@@ -12,10 +12,10 @@ import (
 	"github.com/Xushengqwer/go-common/models/enums"
 	"go.uber.org/zap" // 引入 zap 用于日志字段
 
-	"user_hub/dependencies"
-	"user_hub/models/vo"
-	"user_hub/repository/mysql"
-	"user_hub/repository/redis"
+	"github.com/Xushengqwer/user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	"github.com/Xushengqwer/user_hub/repository/mysql"
+	"github.com/Xushengqwer/user_hub/repository/redis"
 )
 
 // AuthTokenService 定义了管理认证令牌（Access Token 和 Refresh Token）的服务接口。

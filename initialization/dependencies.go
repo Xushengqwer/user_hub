@@ -8,10 +8,10 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"user_hub/config"
+	"github.com/Xushengqwer/user_hub/config"
 	// 直接导入本地的 dependencies 包 (假设其包声明为 package dependencies)
-	"user_hub/dependencies"
-	"user_hub/utils"
+	"github.com/Xushengqwer/user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/utils"
 )
 
 // AppDependencies 封装了应用运行所需的所有基础依赖项。
@@ -19,13 +19,14 @@ import (
 //   - 将各个独立的依赖（数据库连接、Redis客户端、配置、日志等）聚合到一个结构体中。
 //   - 方便在应用的不同层（如服务层、控制器层）之间传递这些共享的依赖。
 type AppDependencies struct {
-	Config       *config.UserHubConfig          // Config: 应用的全局配置。
-	Logger       *core.ZapLogger                // Logger: Zap 日志记录器实例。
-	DB           *gorm.DB                       // DB: GORM 数据库连接实例 (通常是原始连接，非事务性)。
-	RedisClient  *redis.Client                  // RedisClient: Redis v9 客户端实例。
-	JwtToken     dependencies.JWTTokenInterface // JWTUtil: JWT 工具实例。
-	WechatClient dependencies.WechatClient      // WechatClient: 微信 API 客户端实例。
-	SMSClient    dependencies.SMSClient         // SMSClient: 短信服务客户端实例。
+	Config       *config.UserHubConfig           // Config: 应用的全局配置。
+	Logger       *core.ZapLogger                 // Logger: Zap 日志记录器实例。
+	DB           *gorm.DB                        // DB: GORM 数据库连接实例 (通常是原始连接，非事务性)。
+	RedisClient  *redis.Client                   // RedisClient: Redis v9 客户端实例。
+	JwtToken     dependencies.JWTTokenInterface  // JWTUtil: JWT 工具实例。
+	WechatClient dependencies.WechatClient       // WechatClient: 微信 API 客户端实例。
+	SMSClient    dependencies.SMSClient          // SMSClient: 短信服务客户端实例。
+	COSClient    dependencies.COSClientInterface // 新增 COS 客户端接口
 }
 
 // SetupDependencies 初始化应用所需的所有基础依赖项。
@@ -101,7 +102,17 @@ func SetupDependencies(cfg *config.UserHubConfig, logger *core.ZapLogger) (*AppD
 	deps.SMSClient = smsClient // 字段名改为 SMSClient
 	logger.Info("短信服务客户端初始化成功")
 
-	// 7. 所有依赖项初始化成功，返回包含它们的结构体
+	// 7. 初始化 COS 客户端
+	//    - 依赖配置中的 COSConfig 和 logger
+	cosClient, err := dependencies.InitCOS(&cfg.COSConfig, logger)
+	if err != nil {
+		logger.Error("初始化 COS 客户端失败", zap.Error(err))
+		return nil, fmt.Errorf("初始化 COS 客户端失败: %w", err)
+	}
+	deps.COSClient = cosClient
+	logger.Info("COS 客户端初始化成功")
+
+	// 8. 所有依赖项初始化成功，返回包含它们的结构体 (序号可能需要调整)
 	logger.Info("所有基础依赖项初始化完成")
 	return &deps, nil
 }

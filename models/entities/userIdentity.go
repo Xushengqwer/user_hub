@@ -1,8 +1,8 @@
 package entities
 
 import (
+	"github.com/Xushengqwer/user_hub/models/enums"
 	"time"
-	"user_hub/models/enums"
 )
 
 // UserIdentity 用户身份信息

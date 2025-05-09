@@ -7,9 +7,9 @@ import (
 	"github.com/Xushengqwer/go-common/commonerrors"
 
 	// 假设 IdentityCredential 移到了 dto 包
-	"user_hub/models/dto"
-	"user_hub/models/entities"
-	"user_hub/models/enums"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/entities"
+	"github.com/Xushengqwer/user_hub/models/enums"
 
 	"gorm.io/gorm"
 )

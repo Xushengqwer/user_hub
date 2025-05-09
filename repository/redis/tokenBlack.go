@@ -8,7 +8,7 @@ import (
 	// 使用 go-redis/v9
 	"github.com/redis/go-redis/v9"
 
-	"user_hub/constants" // 引入常量包获取前缀
+	"github.com/Xushengqwer/user_hub/constants" // 引入常量包获取前缀
 )
 
 // TODO: 考虑为令牌黑名单使用单独的、启用持久化（RDB+AOF）的 Redis 实例。

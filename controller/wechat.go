@@ -11,9 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap" // 引入 zap 用于日志字段
 
-	"user_hub/models/dto"
-	"user_hub/models/vo"
-	"user_hub/service/login/oAuth"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	"github.com/Xushengqwer/user_hub/service/login/oAuth"
 )
 
 // WechatAuthController 处理与微信小程序认证相关的 HTTP 请求。

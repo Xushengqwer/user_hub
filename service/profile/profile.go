@@ -3,18 +3,18 @@ package profile
 import (
 	"context"
 	"errors"
-	"user_hub/models/enums"
+	"github.com/Xushengqwer/user_hub/models/enums"
 
 	// 引入公共模块
 	"github.com/Xushengqwer/go-common/commonerrors"
 	"github.com/Xushengqwer/go-common/core" // 引入日志包
 	"go.uber.org/zap"                       // 引入 zap 用于日志字段
 
-	"user_hub/models/dto"
-	"user_hub/models/entities"
-	"user_hub/models/vo"
-	"user_hub/repository/mysql"
-	// 移除了 user_hub/userError 的导入
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/entities"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	"github.com/Xushengqwer/user_hub/repository/mysql"
+	// 移除了 github.com/Xushengqwer/user_hub/userError 的导入
 
 	"gorm.io/gorm"
 )

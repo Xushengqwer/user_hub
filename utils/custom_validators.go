@@ -3,9 +3,9 @@ package utils
 import (
 	"fmt"
 	"github.com/Xushengqwer/go-common/models/enums"
+	myenums "github.com/Xushengqwer/user_hub/models/enums"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	myenums "user_hub/models/enums"
 
 	"regexp"
 	"unicode"

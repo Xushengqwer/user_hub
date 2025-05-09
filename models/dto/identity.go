@@ -1,6 +1,6 @@
 package dto
 
-import "user_hub/models/enums"
+import "github.com/Xushengqwer/user_hub/models/enums"
 
 // CreateIdentityDTO 定义创建身份请求结构体
 // - 用于用户绑定新登录方式时接收请求数据

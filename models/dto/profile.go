@@ -1,6 +1,6 @@
 package dto
 
-import "user_hub/models/enums"
+import "github.com/Xushengqwer/user_hub/models/enums"
 
 // CreateProfileDTO 定义创建资料请求结构体
 // - 用于用户首次填写个人资料时接收请求数据

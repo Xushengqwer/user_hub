@@ -14,4 +14,5 @@ type UserHubConfig struct {
 	RedisConfig   RedisConfig          `mapstructure:"redisConfig" json:"redisConfig" yaml:"redisConfig"`
 	WechatConfig  WechatConfig         `mapstructure:"wechatConfig" json:"wechatConfig" yaml:"wechatConfig"`
 	SMSConfig     SMSConfig            `mapstructure:"smsConfig" json:"smsConfig" yaml:"smsConfig"`
+	COSConfig     COSConfig            `mapstructure:"cosConfig" json:"cosConfig" yaml:"cosConfig"`
 }

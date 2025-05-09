@@ -6,7 +6,7 @@ import (
 	"fmt" // 引入 fmt 包用于错误包装
 	"github.com/Xushengqwer/go-common/commonerrors"
 
-	"user_hub/models/entities"
+	"github.com/Xushengqwer/user_hub/models/entities"
 
 	"gorm.io/gorm"
 )

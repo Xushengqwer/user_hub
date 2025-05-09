@@ -11,10 +11,10 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"user_hub/models/dto"
-	"user_hub/models/entities"
-	"user_hub/models/vo"
-	"user_hub/repository/mysql"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/entities"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	"github.com/Xushengqwer/user_hub/repository/mysql"
 
 	"gorm.io/gorm"
 )

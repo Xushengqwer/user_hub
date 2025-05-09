@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Xushengqwer/go-common/models/enums"
+	"github.com/Xushengqwer/user_hub/config"
+	"github.com/Xushengqwer/user_hub/constants"
 	"github.com/google/uuid"
 	"time"
-	"user_hub/config"
-	"user_hub/constants"
 
 	"github.com/golang-jwt/jwt/v5" // 引入 v5 版本的 JWT 包
 )
