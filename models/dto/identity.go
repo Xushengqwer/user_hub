@@ -21,3 +21,10 @@ type UpdateIdentityDTO struct {
 	// 新凭证（如新密码哈希）
 	Credential string `json:"credential" binding:"required" example:"new_hashed_password"`
 }
+
+// IdentityCredential 定义身份验证所需的最小字段集结构体
+// - 用于返回用户身份凭证的核心信息
+type IdentityCredential struct {
+	UserID     string `gorm:"column:user_id"`    // 用户 ID
+	Credential string `gorm:"column:credential"` // 身份凭证（如密码哈希）
+}

@@ -7,8 +7,11 @@ import (
 
 // UserProfile 用户资料信息
 type UserProfile struct {
+	//主键ID
+	ID uint `gorm:"primary_key;auto_increment"`
+
 	// 关联 User 表的 UserID，外键+级联删除
-	UserID string `gorm:"type:char(36);not null;index;foreignKey:UserID;references:user_id"`
+	UserID string `gorm:"type:char(36);not null;index;foreignKey:UserID;references:user_id;constraint:OnDelete:CASCADE"`
 
 	// 昵称
 	Nickname string `gorm:"type:varchar(255)"`

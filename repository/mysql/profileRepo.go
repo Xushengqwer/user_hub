@@ -3,93 +3,106 @@ package mysql
 import (
 	"context"
 	"errors"
+	"fmt" // 引入 fmt 包用于错误包装
+	"github.com/Xushengqwer/go-common/commonerrors"
+
 	"user_hub/models/entities"
-	"user_hub/userError"
 
 	"gorm.io/gorm"
 )
 
-// ProfileRepository 定义用户资料仓库接口
-// - 提供管理用户资料的 CRUD 操作
+// ProfileRepository 定义了与用户资料（UserProfile）数据存储相关的操作接口。
+// - 它抽象了数据库交互，为用户资料提供 CRUD（创建、读取、更新、删除）功能。
 type ProfileRepository interface {
-	// CreateProfile 创建新的用户资料
-	// - 输入: ctx 上下文, profile 用户资料实体
-	// - 输出: error 操作错误
+	// CreateProfile 持久化一条新的用户资料记录。
+	// - 接收应用上下文和待创建的用户资料实体。
+	// - 如果数据库操作失败，则返回包装后的错误。
 	CreateProfile(ctx context.Context, profile *entities.UserProfile) error
 
-	// GetProfileByUserID 根据用户 ID 获取用户资料
-	// - 输入: ctx 上下文, userID 用户 ID
-	// - 输出: *entities.UserProfile 用户资料指针, error 操作错误
+	// GetProfileByUserID 根据用户 ID 检索单个用户资料的完整信息。
+	// - 如果未找到匹配的用户资料，将返回 commonerrors.ErrRepoNotFound。
+	// - 其他数据库错误将被包装后返回。
 	GetProfileByUserID(ctx context.Context, userID string) (*entities.UserProfile, error)
 
-	// UpdateProfile 更新用户资料信息
-	// - 输入: ctx 上下文, profile 用户资料实体
-	// - 输出: error 操作错误
+	// UpdateProfile 更新一个已存在的用户资料信息。
+	// - 注意：此方法当前使用 GORM 的 Save，会更新记录的所有字段。服务层应确保传入的实体是期望的完整状态。
+	// - 如果数据库操作失败，则返回包装后的错误。
 	UpdateProfile(ctx context.Context, profile *entities.UserProfile) error
 
-	// DeleteProfile 删除用户资料
-	// - 输入: ctx 上下文, userID 用户 ID
-	// - 输出: error 操作错误
-	DeleteProfile(ctx context.Context, userID string) error
+	// DeleteProfile 根据用户 ID 删除一条用户资料记录。
+	// - 如果数据库操作失败，则返回包装后的错误。
+	DeleteProfile(ctx context.Context, db *gorm.DB, userID string) error
 }
 
-// profileRepository 实现 ProfileRepository 接口的结构体
+// profileRepository 是 ProfileRepository 接口基于 GORM 的实现。
 type profileRepository struct {
-	db *gorm.DB // GORM 数据库实例
+	db *gorm.DB // db 是 GORM 数据库连接实例
 }
 
-// NewProfileRepository 创建 ProfileRepository 实例
-// - 输入: db GORM 数据库实例
-// - 输出: ProfileRepository 接口实现
+// NewProfileRepository 创建一个新的 profileRepository 实例。
+// - 依赖注入 GORM 数据库连接。
 func NewProfileRepository(db *gorm.DB) ProfileRepository {
 	return &profileRepository{db: db}
 }
 
-// CreateProfile 创建用户资料
-// - 输入: ctx 上下文, profile 用户资料实体
-// - 输出: error 操作错误
-// - SQL: INSERT INTO user_profiles (user_id, ...) VALUES (?, ...)
+// CreateProfile 实现接口方法，持久化用户资料记录。
 func (r *profileRepository) CreateProfile(ctx context.Context, profile *entities.UserProfile) error {
-	// 使用 GORM 创建用户资料记录
-	return r.db.WithContext(ctx).Create(profile).Error
+	// 执行数据库创建操作
+	if err := r.db.WithContext(ctx).Create(profile).Error; err != nil {
+		// 包装创建操作时发生的错误，添加中文上下文信息
+		return fmt.Errorf("profileRepo.CreateProfile: 创建用户资料失败 (UserID: %s): %w", profile.UserID, err)
+	}
+	// 操作成功，返回 nil
+	return nil
 }
 
-// GetProfileByUserID 根据用户 ID 获取用户资料
-// - 输入: ctx 上下文, userID 用户 ID
-// - 输出: *entities.UserProfile 用户资料指针, error 操作错误
-// - SQL: SELECT * FROM user_profiles WHERE user_id = ? LIMIT 1
+// GetProfileByUserID 实现接口方法，根据用户 ID 获取用户资料。
 func (r *profileRepository) GetProfileByUserID(ctx context.Context, userID string) (*entities.UserProfile, error) {
-	// 1. 查询用户资料
-	// - 从 user_profiles 表中查找指定 user_id 的记录
 	var profile entities.UserProfile
+	// 执行数据库查询操作
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&profile).Error
 
-	// 2. 处理查询结果
-	// - 如果记录不存在，返回自定义错误 ErrProfileNotFound
-	// - 如果发生其他错误，返回原始错误
 	if err != nil {
+		// 检查是否是 GORM 的“记录未找到”错误
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, userError.ErrProfileNotFound
+			// 根据约定，记录未找到时返回统一的公共错误
+			return nil, commonerrors.ErrRepoNotFound
 		}
-		return nil, err
+		// 包装其他查询错误，添加中文上下文信息
+		return nil, fmt.Errorf("profileRepo.GetProfileByUserID: 查询用户资料失败 (UserID: %s): %w", userID, err)
 	}
+	// 查询成功，返回找到的用户资料实体和 nil 错误
 	return &profile, nil
 }
 
-// UpdateProfile 更新用户资料
-// - 输入: ctx 上下文, profile 用户资料实体
-// - 输出: error 操作错误
-// - SQL: UPDATE user_profiles SET ... WHERE user_id = ?
+// UpdateProfile 实现接口方法，更新用户资料信息。
 func (r *profileRepository) UpdateProfile(ctx context.Context, profile *entities.UserProfile) error {
-	// 使用 GORM 更新用户资料记录
-	return r.db.WithContext(ctx).Save(profile).Error
+	// 注意：Save 会更新记录的所有字段。服务层应确保传入的 profile 实体是期望的完整状态，
+	// 否则未在 profile 中设置的字段在数据库中可能会被更新为零值。
+	// 如果仅需更新部分字段，服务层应先获取完整实体，修改后再调用此方法，
+	// 或者此方法内部改为使用 Updates 配合 Select 来精确控制更新字段。
+	if err := r.db.WithContext(ctx).Save(profile).Error; err != nil {
+		// 包装更新操作时发生的错误，添加中文上下文信息
+		return fmt.Errorf("profileRepo.UpdateProfile: 更新用户资料失败 (UserID: %s): %w", profile.UserID, err)
+	}
+	// 操作成功，返回 nil
+	return nil
 }
 
-// DeleteProfile 删除用户资料
-// - 输入: ctx 上下文, userID 用户 ID
-// - 输出: error 操作错误
-// - SQL: DELETE FROM user_profiles WHERE user_id = ?
-func (r *profileRepository) DeleteProfile(ctx context.Context, userID string) error {
-	// 使用 GORM 删除指定 user_id 的用户资料记录
-	return r.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&entities.UserProfile{}).Error
+// DeleteProfile 实现接口方法，删除用户资料。
+// - 使用传入的 db 对象执行操作，使其能够参与外部事务。
+func (r *profileRepository) DeleteProfile(ctx context.Context, db *gorm.DB, userID string) error {
+	// GORM 的 Delete 需要一个模型实例（即使是空实例）来确定表名
+	// 使用传入的 db (可能是事务 tx，也可能是原始连接)
+	result := db.WithContext(ctx).Where("user_id = ?", userID).Delete(&entities.UserProfile{})
+	if result.Error != nil {
+		// 包装删除操作时发生的错误，添加中文上下文信息
+		return fmt.Errorf("profileRepo.DeleteProfile: 删除用户资料失败 (UserID: %s): %w", userID, result.Error)
+	}
+	// 如果没有行受影响，可能意味着该用户的资料本就不存在。
+	// 服务层通常会先判断用户是否存在，或者删除操作本身具有幂等性。
+	// if result.RowsAffected == 0 {
+	//     return commonerrors.ErrRepoNotFound // 如果需要严格区分“未找到可删除的记录”
+	// }
+	return nil
 }

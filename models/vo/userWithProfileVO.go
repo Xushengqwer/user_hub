@@ -1,8 +1,9 @@
 package vo
 
 import (
+	"github.com/Xushengqwer/go-common/models/enums"
 	"time"
-	"user_hub/models/enums"
+	myenums "user_hub/models/enums"
 )
 
 // UserWithProfileVO 定义用户及其资料响应结构体
@@ -19,7 +20,7 @@ type UserWithProfileVO struct {
 	// 头像 URL
 	AvatarURL string `json:"avatar_url" example:"https://example.com/avatar.jpg"`
 	// 性别（0=未知, 1=男, 2=女）
-	Gender enums.Gender `json:"gender" example:"1"`
+	Gender myenums.Gender `json:"gender" example:"1"`
 	// 省份
 	Province string `json:"province" example:"广东"`
 	// 城市

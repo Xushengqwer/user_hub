@@ -1,9 +1,9 @@
 package entities
 
 import (
+	"github.com/Xushengqwer/go-common/models/enums"
 	"gorm.io/gorm"
 	"time"
-	"user_hub/models/enums"
 )
 
 // User 用户核心信息

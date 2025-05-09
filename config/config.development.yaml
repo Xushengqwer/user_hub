@@ -1,0 +1,64 @@
+# E:/Doer_xyz/user_hub/config/config.development.yaml
+
+# Zap 日志配置
+zapConfig:
+  level: "debug"
+  encoding: "console" # "json" for production in K8s
+
+# GORM 日志配置
+gormLogConfig:
+  level: "info" # "warn" or "error" in production
+  slowThresholdMs: 200
+  skipCallerLookup: true
+  ignoreRecordNotFoundError: true
+
+# 服务器配置
+serverConfig:
+  listen_addr: "0.0.0.0" # 在容器内监听所有接口
+  port: "8080"
+  requestTimeout: 60s # 例如 30 秒
+
+# 分布式追踪配置
+tracerConfig:
+  enabled: false # 根据需要启用
+  exporter_type: "otlp_grpc" # 或 "stdout" for testing
+  exporter_endpoint: "otel-collector:4317" # 示例，如果使用 OTel Collector
+  sampler_type: "always_on" # 或 "traceid_ratio"
+  sampler_param: 1.0
+
+# JWT 配置
+jwtConfig:
+  secret_key: "your-very-secret-key-for-access-tokens" # !!!生产环境请使用强密钥，并从环境变量或K8s Secret加载!!!
+  issuer: "user_hub_service"
+  refresh_secret: "your-very-secret-key-for-refresh-tokens" # !!!生产环境请使用强密钥!!!
+
+# MySQL 配置
+mySQLConfig:
+  dsn: "root:root@tcp(localhost:3306)/doer_userHub?charset=utf8mb4&parseTime=true&loc=Local"
+  maxOpenConn: 50
+  maxIdleConn: 30
+
+# Redis 配置
+redisConfig:
+  address: "localhost"
+  port: 6379
+  password: "root" # 与 docker-compose 中 Redis 的密码一致
+  db: 0
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+  pool_size: 10
+  min_idle_conns: 3
+
+# 微信小程序配置 (请填写实际值或通过环境变量注入)
+wechatConfig:
+  appID: "your_wechat_appid" # 占位符
+  secret: "your_wechat_secret" # 占位符
+
+# SMS 配置 (请填写实际值或通过环境变量注入)
+smsConfig:
+  appID: "your_sms_appid" # 占位符
+  secret: "your_sms_secret" # 占位符
+  endpoint: "your_sms_endpoint" # 占位符 (例如 "https://api.weixin.qq.com/sms/send")
+  templateID: "your_sms_templateID" # 占位符
+  env: "your_cloud_env_id" # 占位符 (云托管环境 ID)

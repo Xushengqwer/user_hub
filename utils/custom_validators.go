@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
+	"github.com/Xushengqwer/go-common/models/enums"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"user_hub/models/enums"
+	myenums "user_hub/models/enums"
 
 	"regexp"
 	"unicode"
@@ -56,11 +57,11 @@ func ValidGender(fl validator.FieldLevel) bool {
 	if field.IsZero() || field.Interface() == nil {
 		return true // 如果是 nil，跳过验证（假设 nil 是合法的）
 	}
-	val, ok := field.Interface().(*enums.Gender)
+	val, ok := field.Interface().(*myenums.Gender)
 	if !ok {
 		return false
 	}
-	return *val == enums.Female || *val == enums.Male || *val == enums.Unknown
+	return *val == myenums.Female || *val == myenums.Male || *val == myenums.Unknown
 }
 
 func ValidStatus(fl validator.FieldLevel) bool {
@@ -72,7 +73,7 @@ func ValidStatus(fl validator.FieldLevel) bool {
 	if !ok {
 		return false
 	}
-	return *val == enums.Active || *val == enums.Blacklisted
+	return *val == enums.StatusActive || *val == enums.StatusBlacklisted
 }
 
 func ValidRole(fl validator.FieldLevel) bool {
@@ -84,7 +85,7 @@ func ValidRole(fl validator.FieldLevel) bool {
 	if !ok {
 		return false
 	}
-	return *val == enums.Admin || *val == enums.User || *val == enums.Guest
+	return *val == enums.RoleAdmin || *val == enums.RoleUser || *val == enums.RoleGuest
 }
 
 // RegisterCustomValidators 注册自定义验证器

@@ -10,6 +10,6 @@ type TokenPair struct {
 }
 
 type LoginResponse struct {
-	User  Userinfo  `json:"user"`  // 用户信息
-	Token TokenPair `json:"token"` // Token 对
+	User  Userinfo  `json:"userManage"` // 用户信息
+	Token TokenPair `json:"token"`      // Token 对
 }

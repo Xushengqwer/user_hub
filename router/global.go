@@ -1,83 +1,112 @@
 package router
 
 import (
-	"user_hub/common/config"
-	"user_hub/common/core"
-	"user_hub/common/dependencies"
+	// 引入公共模块和项目包
+	"github.com/Xushengqwer/go-common/core"    // 引入日志包
+	swaggerFiles "github.com/swaggo/files"     // swagger-files 包
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger 包
+	"time"
+	"user_hub/config"
 	"user_hub/constants"
-	"user_hub/controller"
-	"user_hub/initialization"
 	"user_hub/middleware"
 
+	commonMiddleware "github.com/Xushengqwer/go-common/middleware"
+
 	"github.com/gin-gonic/gin"
+
+	otelgin "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+
+	"user_hub/controller"
+	"user_hub/dependencies"
+	_ "user_hub/docs" // 引入 docs 包以注册 Swagger 信息
+	"user_hub/initialization"
 )
 
-// SetupRouter 初始化并配置 Gin 路由器
-// 该函数负责创建路由实例，注册全局中间件，设置统一的 API 前缀，并整合所有控制器的路由
-// - 输入: logger 日志实例，用于记录请求和错误
-// - 输入: cfg 配置实例，用于速率限制等中间件
-// - 输入: smsClient 短信服务客户端，用于 AuthController
-// - 输入: jwtUtil JWT 工具实例，用于认证中间件
-// - 输入: appServices 应用服务结构体，包含所有服务实例
-// - 输出: *gin.Engine 配置完成的路由器实例
+// SetupRouter 初始化并配置 Gin 引擎，注册所有中间件和路由。
+// 设计目的:
+//   - 作为应用路由配置的统一入口点。
+//   - 应用全局中间件，处理通用逻辑如日志、错误恢复、超时、限流、CORS等。
+//   - 创建 API 版本分组（/api/v1）。
+//   - 实例化所有控制器，并将它们的路由注册到相应的分组下。
+//
+// 注意: 认证和权限校验预期由上游网关处理，此服务不再包含相关中间件。
+// 参数:
+//   - logger: Zap 日志记录器实例，用于中间件和控制器。
+//   - cfg: 应用的全局配置 (UserHubConfig)，用于获取 RateLimitConfig 等。
+//   - jwtUtil: JWT 工具实例，传递给需要它的控制器。
+//   - appServices: 包含所有已初始化服务实例的结构体。
+//
+// 返回:
+//   - *gin.Engine: 配置完成的 Gin 引擎实例，可以直接运行。
 func SetupRouter(
 	logger *core.ZapLogger,
-	cfg *config.RateLimitConfig,
-	smsClient dependencies.SMSClient,
-	jwtUtil dependencies.JWTUtilityInterface,
-	appServices *initialization.AppServices, // 使用 AppServices 结构体
+	cfg *config.UserHubConfig, // 传入完整的 UserHubConfig
+	jwtUtil dependencies.JWTTokenInterface,
+	appServices *initialization.AppServices,
 ) *gin.Engine {
-	// 第一步：创建 Gin 路由器实例
+	logger.Info("开始设置 Gin 路由...")
+
+	// 1. 创建 Gin 引擎实例
+	//    使用 gin.Default() 包含 Logger 和 Recovery 中间件。Recovery 是有用的。
 	router := gin.Default()
 
-	// 第二步：注册全局中间件（按指定顺序）
-	router.Use(middleware.ErrorHandlingMiddleware(logger))
-	router.Use(middleware.RequestIDMiddleware())
-	router.Use(middleware.RequestLoggerMiddleware(logger))
-	router.Use(middleware.CorsMiddleware())
-	router.Use(middleware.RateLimitMiddleware(logger, cfg))
-	router.Use(middleware.RequestTimeoutMiddleware(logger, constants.RequestTimeout))
+	// 1. OTel Middleware (最先，处理追踪上下文和 Span)
+	router.Use(otelgin.Middleware(constants.ServiceName))
 
-	// 第三步：创建统一的 API 前缀分组
+	// 2. Panic Recovery (捕获后续中间件和 handler 的 panic)
+	router.Use(commonMiddleware.ErrorHandlingMiddleware(logger))
+
+	// 3. Request Logger (记录访问日志，需要 TraceID)
+	// 注意：你的 RequestLoggerMiddleware 需要 *zap.Logger，而你注入的是 *core.ZapLogger
+	// 你需要将 core.ZapLogger 适配一下，或者修改中间件接收 core.ZapLogger
+	// 假设你的 core.ZapLogger 有一个方法 .Logger() 返回底层的 *zap.Logger
+	if baseLogger := logger.Logger(); baseLogger != nil {
+		router.Use(commonMiddleware.RequestLoggerMiddleware(baseLogger))
+	} else {
+		logger.Warn("无法获取底层的 *zap.Logger，跳过 RequestLoggerMiddleware 注册")
+	}
+
+	// 4. Request Timeout (超时控制)
+	// 假设配置中的 RequestTimeout 是秒数
+	requestTimeout := time.Duration(cfg.ServerConfig.RequestTimeout) * time.Second
+	router.Use(commonMiddleware.RequestTimeoutMiddleware(logger, requestTimeout))
+
+	// 5. User Context (提取用户信息)
+	router.Use(middleware.UserContextMiddleware())
+	// 3. 创建 API 版本分组 /api/v1
 	v1 := router.Group("/api/v1")
+	logger.Info("API 路由将注册到 /api/v1 分组下")
 
-	// 第四步：初始化所有控制器并注册路由
-	// 4.1 初始化 AuthController 并注册路由
-	authCtrl := controller.NewAuthController(smsClient, appServices.CodeRepo)
+	// 4. 初始化所有控制器 (使用更新后的名称和依赖)
+	accountCtrl := controller.NewAccountController(appServices.Account, logger)
+	authCtrl := controller.NewAuthController(appServices.SMS, appServices.CodeRepo, logger) // AuthController 依赖 SMS, CodeRepo, Logger
+	identityCtrl := controller.NewIdentityController(appServices.IdentityService, jwtUtil, logger)
+	phoneCtrl := controller.NewPhoneAuthController(appServices.Phone, logger) // 使用更新后的名称和依赖
+	profileCtrl := controller.NewUserProfileController(appServices.ProfileService, jwtUtil, logger)
+	tokenCtrl := controller.NewAuthTokenController(appServices.TokenService, jwtUtil, logger)
+	userCtrl := controller.NewUserController(appServices.UserService, jwtUtil, logger)
+	userListQueryCtrl := controller.NewUserListQueryController(appServices.QueryService, jwtUtil, logger)
+	wechatCtrl := controller.NewWechatAuthController(appServices.WechatMiniProgram, logger) // 使用更新后的名称和依赖
+
+	// 5. 注册每个控制器的路由到 /api/v1 分组
+	accountCtrl.RegisterRoutes(v1)
 	authCtrl.RegisterRoutes(v1)
-
-	// 4.2 初始化 IdentityController 并注册路由
-	identityCtrl := controller.NewIdentityController(appServices.IdentityService, jwtUtil)
 	identityCtrl.RegisterRoutes(v1)
-
-	// 4.3 初始化 ProfileController 并注册路由
-	profileCtrl := controller.NewProfileController(appServices.ProfileService, jwtUtil)
+	phoneCtrl.RegisterRoutes(v1)
 	profileCtrl.RegisterRoutes(v1)
-
-	// 4.4 初始化 TokenController 并注册路由
-	tokenCtrl := controller.NewTokenController(appServices.TokenService, jwtUtil)
 	tokenCtrl.RegisterRoutes(v1)
-
-	// 4.5 初始化 QueryController 并注册路由
-	queryCtrl := controller.NewQueryController(appServices.QueryService, jwtUtil)
-	queryCtrl.RegisterRoutes(v1)
-
-	// 4.6 初始化 UserController 并注册路由
-	userCtrl := controller.NewUserController(appServices.UserService, jwtUtil)
 	userCtrl.RegisterRoutes(v1)
-
-	// 4.7 初始化 WechatMiniProgramController 并注册路由
-	wechatCtrl := controller.NewWechatMiniProgramController(appServices.WechatMiniProgram)
+	userListQueryCtrl.RegisterRoutes(v1)
 	wechatCtrl.RegisterRoutes(v1)
 
-	// 4.8 初始化 AccountController 并注册路由
-	accountCtrl := controller.NewAccountController(appServices.Account)
-	accountCtrl.RegisterRoutes(v1)
+	logger.Info("所有业务路由已成功注册")
 
-	// 4.9 初始化 PhoneController 并注册路由
-	phoneCtrl := controller.NewPhoneController(appServices.Phone)
-	phoneCtrl.RegisterRoutes(v1)
+	// 6. 配置 Swagger UI 路由
+	//    确保已在 main.go 或此处导入 _ "user_hub/docs"
+	//    访问路径通常是 /swagger/index.html
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	logger.Info("Swagger UI 路由已注册，访问路径: /swagger/index.html")
 
-	// 第五步：返回配置完成的路由器
+	// 7. 返回配置好的 Gin 引擎
 	return router
 }

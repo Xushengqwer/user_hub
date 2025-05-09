@@ -1,8 +1,8 @@
 package vo
 
 import (
+	"github.com/Xushengqwer/go-common/models/enums"
 	"time"
-	"user_hub/models/enums"
 )
 
 // UserVO 定义用户响应结构体
