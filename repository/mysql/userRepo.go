@@ -8,7 +8,7 @@ import (
 
 	// 导入公共模块的 enums
 	"github.com/Xushengqwer/go-common/models/enums"
-	"user_hub/models/entities"
+	"github.com/Xushengqwer/user_hub/models/entities"
 
 	"gorm.io/gorm"
 )

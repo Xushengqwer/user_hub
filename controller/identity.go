@@ -11,11 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap" // 引入 zap 用于日志字段
 
-	"user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/dependencies"
 
-	"user_hub/models/dto"
-	"user_hub/models/vo"
-	service "user_hub/service/identity"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	service "github.com/Xushengqwer/user_hub/service/identity"
 )
 
 // IdentityController 处理与用户多种身份凭证管理相关的 HTTP 请求。

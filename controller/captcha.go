@@ -10,10 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap" // 引入 zap 用于日志字段
 
-	"user_hub/dependencies"
-	"user_hub/models/dto"
-	"user_hub/repository/redis"
-	"user_hub/utils"
+	"github.com/Xushengqwer/user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/repository/redis"
+	"github.com/Xushengqwer/user_hub/utils"
 )
 
 // AuthController 处理与认证辅助功能相关的 HTTP 请求，例如发送验证码。

@@ -3,8 +3,8 @@ package dependencies
 import (
 	"fmt"
 	"github.com/Xushengqwer/go-common/core"
+	"github.com/Xushengqwer/user_hub/config"
 	"github.com/redis/go-redis/v9"
-	"user_hub/config"
 
 	"time"
 

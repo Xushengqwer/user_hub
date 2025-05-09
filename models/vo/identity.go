@@ -1,8 +1,8 @@
 package vo
 
 import (
+	"github.com/Xushengqwer/user_hub/models/enums"
 	"time"
-	"user_hub/models/enums"
 )
 
 // IdentityVO 定义身份响应结构体

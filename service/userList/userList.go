@@ -7,9 +7,9 @@ import (
 	"github.com/Xushengqwer/go-common/core" // 引入日志包
 	"go.uber.org/zap"                       // 引入 zap 用于日志字段
 
-	"user_hub/models/dto"
-	"user_hub/models/vo"
-	"user_hub/repository/mysql"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	"github.com/Xushengqwer/user_hub/repository/mysql"
 )
 
 // UserListQueryService 定义了用户列表查询相关的服务接口。

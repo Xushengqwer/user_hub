@@ -11,11 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap" // 引入 zap 用于日志字段
 
-	"user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/dependencies"
 	// "user_hub/docs" // 如果您的 linter/IDE 需要，可以导入 docs 包，swag 通常会自动处理
-	"user_hub/models/dto"
-	"user_hub/models/vo"
-	"user_hub/service/token" // 假设 service/token 包下有 AuthTokenService
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	"github.com/Xushengqwer/user_hub/service/token" // 假设 service/token 包下有 AuthTokenService
 )
 
 // AuthTokenController 处理与认证令牌（Access Token, Refresh Token）管理相关的 HTTP 请求。

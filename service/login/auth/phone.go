@@ -12,13 +12,13 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap" // 引入 zap 用于日志字段
 
-	"user_hub/dependencies"
-	"user_hub/models/dto"
-	"user_hub/models/entities"
-	myenums "user_hub/models/enums"
-	"user_hub/models/vo"
-	"user_hub/repository/mysql"
-	"user_hub/repository/redis"
+	"github.com/Xushengqwer/user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/entities"
+	myenums "github.com/Xushengqwer/user_hub/models/enums"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	"github.com/Xushengqwer/user_hub/repository/mysql"
+	"github.com/Xushengqwer/user_hub/repository/redis"
 
 	"gorm.io/gorm"
 )

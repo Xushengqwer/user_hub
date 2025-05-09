@@ -1,18 +1,18 @@
 package initialization
 
 import (
-	"user_hub/dependencies"
-	"user_hub/service/userManage"
+	"github.com/Xushengqwer/user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/service/userManage"
 
 	// 导入重构后的 service 包路径 (根据实际路径调整)
-	"user_hub/repository/mysql"
-	"user_hub/repository/redis"
-	"user_hub/service/identity"
-	"user_hub/service/login/auth"
-	"user_hub/service/login/oAuth"
-	"user_hub/service/profile"
-	"user_hub/service/token"
-	"user_hub/service/userList"
+	"github.com/Xushengqwer/user_hub/repository/mysql"
+	"github.com/Xushengqwer/user_hub/repository/redis"
+	"github.com/Xushengqwer/user_hub/service/identity"
+	"github.com/Xushengqwer/user_hub/service/login/auth"
+	"github.com/Xushengqwer/user_hub/service/login/oAuth"
+	"github.com/Xushengqwer/user_hub/service/profile"
+	"github.com/Xushengqwer/user_hub/service/token"
+	"github.com/Xushengqwer/user_hub/service/userList"
 )
 
 // AppServices 封装了应用所需的所有服务层实例。

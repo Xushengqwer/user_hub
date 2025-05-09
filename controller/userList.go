@@ -10,11 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap" // 引入 zap 用于日志字段
 
-	"user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/dependencies"
 	// "user_hub/docs" // 如果您的 linter/IDE 需要，可以导入 docs 包，swag 通常会自动处理
-	"user_hub/models/dto"
-	"user_hub/models/vo"
-	service "user_hub/service/userList" // 假设 service/userList 包下有 UserListQueryService
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	service "github.com/Xushengqwer/user_hub/service/userList" // 假设 service/userList 包下有 UserListQueryService
 )
 
 // UserListQueryController 处理用户列表查询相关的 HTTP 请求。

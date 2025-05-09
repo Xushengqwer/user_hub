@@ -18,11 +18,11 @@ import (
 	"go.uber.org/zap"
 
 	// 导入项目包
-	"user_hub/config"
-	"user_hub/constants"
-	_ "user_hub/docs" // Swagger 文档，匿名导入以执行其 init()
-	"user_hub/initialization"
-	"user_hub/router"
+	"github.com/Xushengqwer/user_hub/config"
+	"github.com/Xushengqwer/user_hub/constants"
+	_ "github.com/Xushengqwer/user_hub/docs" // Swagger 文档，匿名导入以执行其 init()
+	"github.com/Xushengqwer/user_hub/initialization"
+	"github.com/Xushengqwer/user_hub/router"
 )
 
 // @title User Hub API

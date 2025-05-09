@@ -2,13 +2,13 @@ package router
 
 import (
 	// 引入公共模块和项目包
-	"github.com/Xushengqwer/go-common/core"    // 引入日志包
+	"github.com/Xushengqwer/go-common/core" // 引入日志包
+	"github.com/Xushengqwer/user_hub/config"
+	"github.com/Xushengqwer/user_hub/constants"
+	"github.com/Xushengqwer/user_hub/middleware"
 	swaggerFiles "github.com/swaggo/files"     // swagger-files 包
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger 包
 	"time"
-	"user_hub/config"
-	"user_hub/constants"
-	"user_hub/middleware"
 
 	commonMiddleware "github.com/Xushengqwer/go-common/middleware"
 
@@ -16,10 +16,10 @@ import (
 
 	otelgin "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
-	"user_hub/controller"
-	"user_hub/dependencies"
-	_ "user_hub/docs" // 引入 docs 包以注册 Swagger 信息
-	"user_hub/initialization"
+	"github.com/Xushengqwer/user_hub/controller"
+	"github.com/Xushengqwer/user_hub/dependencies"
+	_ "github.com/Xushengqwer/user_hub/docs" // 引入 docs 包以注册 Swagger 信息
+	"github.com/Xushengqwer/user_hub/initialization"
 )
 
 // SetupRouter 初始化并配置 Gin 引擎，注册所有中间件和路由。

@@ -8,10 +8,10 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"user_hub/config"
+	"github.com/Xushengqwer/user_hub/config"
 	// 直接导入本地的 dependencies 包 (假设其包声明为 package dependencies)
-	"user_hub/dependencies"
-	"user_hub/utils"
+	"github.com/Xushengqwer/user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/utils"
 )
 
 // AppDependencies 封装了应用运行所需的所有基础依赖项。

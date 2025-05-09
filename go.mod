@@ -1,4 +1,4 @@
-module user_hub
+module github.com/Xushengqwer/user_hub
 
 go 1.23.7
 

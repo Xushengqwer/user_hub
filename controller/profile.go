@@ -10,10 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap" // 引入 zap 用于日志字段
 
-	"user_hub/dependencies"
-	"user_hub/models/dto"
-	"user_hub/models/vo"
-	service "user_hub/service/profile"
+	"github.com/Xushengqwer/user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	service "github.com/Xushengqwer/user_hub/service/profile"
 )
 
 // UserProfileController 处理与用户详细资料（Profile）相关的 HTTP 请求。

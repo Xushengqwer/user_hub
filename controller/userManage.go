@@ -10,11 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"user_hub/dependencies"
+	"github.com/Xushengqwer/user_hub/dependencies"
 	// "user_hub/docs" // 如果您的 linter/IDE 需要，可以导入 docs 包，swag 通常会自动处理
-	"user_hub/models/dto"
-	"user_hub/models/vo"
-	service "user_hub/service/userManage"
+	"github.com/Xushengqwer/user_hub/models/dto"
+	"github.com/Xushengqwer/user_hub/models/vo"
+	service "github.com/Xushengqwer/user_hub/service/userManage"
 )
 
 // UserManageController 处理与核心用户账户管理相关的 HTTP 请求。

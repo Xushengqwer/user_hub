@@ -2,8 +2,8 @@ package vo
 
 import (
 	"github.com/Xushengqwer/go-common/models/enums"
+	myenums "github.com/Xushengqwer/user_hub/models/enums"
 	"time"
-	myenums "user_hub/models/enums"
 )
 
 // UserWithProfileVO 定义用户及其资料响应结构体

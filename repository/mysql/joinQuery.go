@@ -5,8 +5,8 @@ import (
 	"fmt" // 引入 fmt 包用于错误包装
 	"strings"
 
-	"user_hub/models/dto" // 引入 DTO 包
-	"user_hub/models/vo"  // 引入 VO 包
+	"github.com/Xushengqwer/user_hub/models/dto" // 引入 DTO 包
+	"github.com/Xushengqwer/user_hub/models/vo"  // 引入 VO 包
 
 	"gorm.io/gorm"
 )

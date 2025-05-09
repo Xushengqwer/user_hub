@@ -6,7 +6,7 @@ package docs
 
 import (
 	"github.com/Xushengqwer/go-common/response" // 导入您的通用响应包
-	"user_hub/models/vo"                        // 导入您的 VO 包
+	"github.com/Xushengqwer/user_hub/models/vo" // 导入您的 VO 包
 	// 如果需要，导入其他包，例如 enums
 )
 
