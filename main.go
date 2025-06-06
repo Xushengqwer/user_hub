@@ -5,10 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net" // <-- 新增导入
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv" // 新增：用于将字符串转换为布尔值或整数
+	"strconv" // <-- 新增导入
 	"syscall"
 	"time"
 
@@ -51,7 +52,6 @@ func main() {
 	// --- 手动从环境变量覆盖关键配置 (生产环境部署核心) ---
 	log.Println("检查环境变量以覆盖 User Hub 的文件配置...")
 	// 遍历并覆盖所有通过环境变量注入的配置
-	// Server & Log
 	if level := os.Getenv("ZAPCONFIG_LEVEL"); level != "" {
 		cfg.ZapConfig.Level = level
 		log.Printf("通过环境变量覆盖了 ZapConfig.Level: %s\n", level)
@@ -60,42 +60,58 @@ func main() {
 		cfg.GormLogConfig.Level = level
 		log.Printf("通过环境变量覆盖了 GormLogConfig.Level: %s\n", level)
 	}
-	// Tracer
 	if enabled, err := strconv.ParseBool(os.Getenv("TRACERCONFIG_ENABLED")); err == nil {
 		cfg.TracerConfig.Enabled = enabled
 		log.Printf("通过环境变量覆盖了 TracerConfig.Enabled: %t\n", enabled)
 	}
-	// JWT
 	if key := os.Getenv("JWTCONFIG_SECRET_KEY"); key != "" {
 		cfg.JWTConfig.SecretKey = key
-		log.Printf("通过环境变量覆盖了 JWTConfig.SecretKey") // 不打印密钥值
+		log.Printf("通过环境变量覆盖了 JWTConfig.SecretKey\n")
 	}
 	if key := os.Getenv("JWTCONFIG_REFRESH_SECRET"); key != "" {
 		cfg.JWTConfig.RefreshSecret = key
-		log.Printf("通过环境变量覆盖了 JWTConfig.RefreshSecret") // 不打印密钥值
+		log.Printf("通过环境变量覆盖了 JWTConfig.RefreshSecret\n")
 	}
-	// MySQL & Redis
 	if dsn := os.Getenv("MYSQLCONFIG_DSN"); dsn != "" {
 		cfg.MySQLConfig.DSN = dsn
-		log.Printf("通过环境变量覆盖了 MySQLConfig.DSN") // 不打印DSN
+		log.Printf("通过环境变量覆盖了 MySQLConfig.DSN\n")
 	}
-	if addr := os.Getenv("REDISCONFIG_ADDRESS"); addr != "" {
-		cfg.RedisConfig.Address = addr
-		log.Printf("通过环境变量覆盖了 RedisConfig.Address: %s\n", addr)
+	// --- Redis 配置的特殊处理 ---
+	if redisAddrWithPort := os.Getenv("REDISCONFIG_ADDRESS"); redisAddrWithPort != "" {
+		host, portStr, err := net.SplitHostPort(redisAddrWithPort)
+		if err != nil {
+			log.Printf("警告: 无法解析 REDISCONFIG_ADDRESS 环境变量 '%s'，将回退到文件配置: %v\n", redisAddrWithPort, err)
+		} else {
+			port, err := strconv.Atoi(portStr)
+			if err != nil {
+				log.Printf("警告: 无法将 Redis 端口 '%s' 从环境变量中转换为整数，将回退到文件配置: %v\n", portStr, err)
+			} else {
+				cfg.RedisConfig.Address = host
+				cfg.RedisConfig.Port = port
+				log.Printf("通过环境变量覆盖了 Redis 连接: Host=%s, Port=%d\n", host, port)
+			}
+		}
 	}
 	if pass := os.Getenv("REDISCONFIG_PASSWORD"); pass != "" {
 		cfg.RedisConfig.Password = pass
-		log.Printf("通过环境变量覆盖了 RedisConfig.Password")
+		log.Printf("通过环境变量覆盖了 RedisConfig.Password\n")
 	}
-
-	// COS
+	// --- 结束 Redis 特殊处理 ---
+	if id := os.Getenv("WECHATCONFIG_APPID"); id != "" {
+		cfg.WechatConfig.AppID = id
+		log.Printf("通过环境变量覆盖了 WechatConfig.AppID\n")
+	}
+	if secret := os.Getenv("WECHATCONFIG_SECRET"); secret != "" {
+		cfg.WechatConfig.Secret = secret
+		log.Printf("通过环境变量覆盖了 WechatConfig.Secret\n")
+	}
 	if id := os.Getenv("COSCONFIG_SECRET_ID"); id != "" {
 		cfg.COSConfig.SecretID = id
-		log.Printf("通过环境变量覆盖了 CosConfig.SecretId")
+		log.Printf("通过环境变量覆盖了 CosConfig.SecretId\n")
 	}
 	if key := os.Getenv("COSCONFIG_SECRET_KEY"); key != "" {
 		cfg.COSConfig.SecretKey = key
-		log.Printf("通过环境变量覆盖了 CosConfig.SecretKey")
+		log.Printf("通过环境变量覆盖了 CosConfig.SecretKey\n")
 	}
 	if name := os.Getenv("COSCONFIG_BUCKET_NAME"); name != "" {
 		cfg.COSConfig.BucketName = name
@@ -113,7 +129,6 @@ func main() {
 		cfg.COSConfig.BaseURL = url
 		log.Printf("通过环境变量覆盖了 CosConfig.BaseURL: %s\n", url)
 	}
-	// Cookie
 	if secure, err := strconv.ParseBool(os.Getenv("COOKIECONFIG_SECURE")); err == nil {
 		cfg.CookieConfig.Secure = secure
 		log.Printf("通过环境变量覆盖了 CookieConfig.Secure: %t\n", secure)
@@ -128,7 +143,7 @@ func main() {
 	}
 	// --- 结束环境变量覆盖 ---
 
-	// 2. 初始化 Logger (使用可能已被覆盖的配置)
+	// 2. 初始化 Logger
 	logger, loggerErr := sharedCore.NewZapLogger(cfg.ZapConfig)
 	if loggerErr != nil {
 		log.Fatalf("FATAL: 初始化 ZapLogger 失败: %v", loggerErr)
@@ -141,8 +156,7 @@ func main() {
 	}()
 	logger.Info("Logger 初始化成功")
 
-	// ... (main 函数的其余部分保持不变) ...
-	// 3. 初始化 TracerProvider (如果启用)
+	// 3. 初始化 TracerProvider
 	var tracerShutdown func(context.Context) error = func(ctx context.Context) error { return nil }
 	if cfg.TracerConfig.Enabled {
 		var err error
@@ -171,7 +185,7 @@ func main() {
 		logger.Info("分布式追踪已禁用")
 	}
 
-	// 4. 初始化基础依赖 (数据库, Redis, JWT, 外部客户端等)
+	// 4. 初始化基础依赖
 	appDeps, err := initialization.SetupDependencies(&cfg, logger)
 	if err != nil {
 		logger.Fatal("初始化基础依赖失败", zap.Error(err))

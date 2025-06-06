@@ -43,6 +43,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image to GHCR
+        id: build_push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -85,7 +86,7 @@ jobs:
             export GHCR_IMAGE_BASE_LOWERCASE=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
             export IMAGE_TO_PULL_FULL_NAME="${GHCR_IMAGE_BASE_LOWERCASE}:${IMAGE_TAG_TO_PULL}"
             export CONTAINER_NAME="user-hub-app"
-            export HOST_PORT="81" # 为 user_hub 分配一个新的、未被占用的端口
+            export HOST_PORT="81"
             export DOCKER_NETWORK_NAME="doer_infra_doer_xyz_dev_network"
 
             echo "登录 GHCR..."
@@ -109,7 +110,7 @@ jobs:
               -e JWTCONFIG_SECRET_KEY="${{ secrets.PROD_JWT_SECRET_KEY }}" \
               -e JWTCONFIG_REFRESH_SECRET="${{ secrets.PROD_JWT_REFRESH_SECRET }}" \
               -e MYSQLCONFIG_DSN="root:root@tcp(mysql-primary:3306)/doer_userHub?charset=utf8mb4&parseTime=true&loc=Local" \
-              -e REDISCONFIG_ADDRESS="redis" \
+              -e REDISCONFIG_ADDRESS="redis:6379" \
               -e REDISCONFIG_PASSWORD="root" \
               -e WECHATCONFIG_APPID="${{ secrets.PROD_WECHAT_APPID }}" \
               -e WECHATCONFIG_SECRET="${{ secrets.PROD_WECHAT_SECRET }}" \
