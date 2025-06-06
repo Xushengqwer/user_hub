@@ -5,24 +5,24 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net" // <-- 新增导入
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv" // <-- 新增导入
+	"strconv"
 	"syscall"
 	"time"
 
 	// 导入公共模块
 	sharedCore "github.com/Xushengqwer/go-common/core"
 	sharedTracing "github.com/Xushengqwer/go-common/core/tracing"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp" // OTel HTTP instrumentation
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 
 	// 导入项目包
 	"github.com/Xushengqwer/user_hub/config"
 	"github.com/Xushengqwer/user_hub/constants"
-	_ "github.com/Xushengqwer/user_hub/docs" // Swagger 文档，匿名导入以执行其 init()
+	_ "github.com/Xushengqwer/user_hub/docs"
 	"github.com/Xushengqwer/user_hub/initialization"
 	"github.com/Xushengqwer/user_hub/router"
 )
@@ -51,7 +51,12 @@ func main() {
 
 	// --- 手动从环境变量覆盖关键配置 (生产环境部署核心) ---
 	log.Println("检查环境变量以覆盖 User Hub 的文件配置...")
-	// 遍历并覆盖所有通过环境变量注入的配置
+
+	// Server & Log
+	if port := os.Getenv("SERVERCONFIG_PORT"); port != "" {
+		cfg.ServerConfig.Port = port
+		log.Printf("通过环境变量覆盖了 ServerConfig.Port: %s\n", port)
+	}
 	if level := os.Getenv("ZAPCONFIG_LEVEL"); level != "" {
 		cfg.ZapConfig.Level = level
 		log.Printf("通过环境变量覆盖了 ZapConfig.Level: %s\n", level)
@@ -60,10 +65,12 @@ func main() {
 		cfg.GormLogConfig.Level = level
 		log.Printf("通过环境变量覆盖了 GormLogConfig.Level: %s\n", level)
 	}
+	// Tracer
 	if enabled, err := strconv.ParseBool(os.Getenv("TRACERCONFIG_ENABLED")); err == nil {
 		cfg.TracerConfig.Enabled = enabled
 		log.Printf("通过环境变量覆盖了 TracerConfig.Enabled: %t\n", enabled)
 	}
+	// JWT
 	if key := os.Getenv("JWTCONFIG_SECRET_KEY"); key != "" {
 		cfg.JWTConfig.SecretKey = key
 		log.Printf("通过环境变量覆盖了 JWTConfig.SecretKey\n")
@@ -72,11 +79,11 @@ func main() {
 		cfg.JWTConfig.RefreshSecret = key
 		log.Printf("通过环境变量覆盖了 JWTConfig.RefreshSecret\n")
 	}
+	// MySQL & Redis
 	if dsn := os.Getenv("MYSQLCONFIG_DSN"); dsn != "" {
 		cfg.MySQLConfig.DSN = dsn
 		log.Printf("通过环境变量覆盖了 MySQLConfig.DSN\n")
 	}
-	// --- Redis 配置的特殊处理 ---
 	if redisAddrWithPort := os.Getenv("REDISCONFIG_ADDRESS"); redisAddrWithPort != "" {
 		host, portStr, err := net.SplitHostPort(redisAddrWithPort)
 		if err != nil {
@@ -96,7 +103,7 @@ func main() {
 		cfg.RedisConfig.Password = pass
 		log.Printf("通过环境变量覆盖了 RedisConfig.Password\n")
 	}
-	// --- 结束 Redis 特殊处理 ---
+	// WeChat
 	if id := os.Getenv("WECHATCONFIG_APPID"); id != "" {
 		cfg.WechatConfig.AppID = id
 		log.Printf("通过环境变量覆盖了 WechatConfig.AppID\n")
@@ -105,6 +112,7 @@ func main() {
 		cfg.WechatConfig.Secret = secret
 		log.Printf("通过环境变量覆盖了 WechatConfig.Secret\n")
 	}
+	// COS
 	if id := os.Getenv("COSCONFIG_SECRET_ID"); id != "" {
 		cfg.COSConfig.SecretID = id
 		log.Printf("通过环境变量覆盖了 CosConfig.SecretId\n")
@@ -129,6 +137,7 @@ func main() {
 		cfg.COSConfig.BaseURL = url
 		log.Printf("通过环境变量覆盖了 CosConfig.BaseURL: %s\n", url)
 	}
+	// Cookie
 	if secure, err := strconv.ParseBool(os.Getenv("COOKIECONFIG_SECURE")); err == nil {
 		cfg.CookieConfig.Secure = secure
 		log.Printf("通过环境变量覆盖了 CookieConfig.Secure: %t\n", secure)
@@ -156,7 +165,8 @@ func main() {
 	}()
 	logger.Info("Logger 初始化成功")
 
-	// 3. 初始化 TracerProvider
+	// ... (main 函数的其余部分保持不变，从 Tracer 初始化到服务关闭) ...
+	// 3. 初始化 TracerProvider (如果启用)
 	var tracerShutdown func(context.Context) error = func(ctx context.Context) error { return nil }
 	if cfg.TracerConfig.Enabled {
 		var err error
@@ -185,7 +195,7 @@ func main() {
 		logger.Info("分布式追踪已禁用")
 	}
 
-	// 4. 初始化基础依赖
+	// 4. 初始化基础依赖 (数据库, Redis, JWT, 外部客户端等)
 	appDeps, err := initialization.SetupDependencies(&cfg, logger)
 	if err != nil {
 		logger.Fatal("初始化基础依赖失败", zap.Error(err))
@@ -213,7 +223,7 @@ func main() {
 		Handler: otelhttp.NewHandler(setupRouter, "HTTPServer"),
 	}
 
-	// 8. 启动服务器
+	// 8. 启动服务器 (使用 goroutine，以便不阻塞后续的优雅关停逻辑)
 	go func() {
 		logger.Info("HTTP 服务器开始监听", zap.String("address", serverAddress))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
