@@ -93,12 +93,13 @@ func SetupDependencies(cfg *config.UserHubConfig, logger *core.ZapLogger) (*AppD
 	//    - NewSMSClient 内部会进行配置校验并可能返回错误。
 	logger.Info("准备初始化短信服务客户端", zap.Any("smsConfig", cfg.SMSConfig)) // 打印配置用于调试
 	smsClient, err := dependencies.NewSMSClient(&cfg.SMSConfig)      // 直接使用包名调用
-	if err != nil {
-		// 短信服务初始化失败可能是配置问题或依赖问题。
-		// 根据业务重要性，决定是否将其视为启动失败。当前视为失败。
-		logger.Error("初始化短信服务客户端失败", zap.Error(err)) // 记录错误详情
-		return nil, fmt.Errorf("初始化短信服务失败: %w", err) // 返回包装后的错误
-	}
+	//if err != nil {
+	//   暂未接入，注释掉失败抛错是异常的代码
+	//	// 短信服务初始化失败可能是配置问题或依赖问题。
+	//	// 根据业务重要性，决定是否将其视为启动失败。当前视为失败。
+	//	logger.Error("初始化短信服务客户端失败", zap.Error(err)) // 记录错误详情
+	//	return nil, fmt.Errorf("初始化短信服务失败: %w", err) // 返回包装后的错误
+	//}
 	deps.SMSClient = smsClient // 字段名改为 SMSClient
 	logger.Info("短信服务客户端初始化成功")
 
