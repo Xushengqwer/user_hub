@@ -1,0 +1,130 @@
+name: CI/CD for User Hub Service
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  # user_hub 应用在容器内监听的端口，根据你的配置文件
+  APP_CONTAINER_PORT: 8081
+
+jobs:
+  build-and-push-to-ghcr:
+    name: Build and Push User Hub to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag_short_sha: ${{ steps.extract_sha_tag.outputs.sha_tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,format=short,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image to GHCR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract short SHA tag from metadata
+        id: extract_sha_tag
+        run: |
+          TAGS="${{ steps.meta.outputs.tags }}"
+          SHA_TAG=$(echo "$TAGS" | tr ',' '\n' | grep -v 'latest' | grep "ghcr.io/${{ github.repository }}:" | head -n 1 | sed 's/.*://')
+          if [ -z "$SHA_TAG" ]; then
+            echo "Falling back to truncated github.sha"
+            SHA_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
+          fi
+          echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
+
+  deploy-to-cvm:
+    name: Deploy User Hub to Tencent Cloud CVM
+    runs-on: ubuntu-latest
+    needs: build-and-push-to-ghcr
+
+    steps:
+      - name: Deploy User Hub to CVM
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.CVM_HOST }}
+          username: ${{ secrets.CVM_USERNAME }}
+          key: ${{ secrets.CVM_SSH_PRIVATE_KEY }}
+          command_timeout: 20m
+
+          script: |
+            set -e
+
+            export IMAGE_TAG_TO_PULL="${{ needs.build-and-push-to-ghcr.outputs.image_tag_short_sha }}"
+            export GHCR_IMAGE_BASE_LOWERCASE=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            export IMAGE_TO_PULL_FULL_NAME="${GHCR_IMAGE_BASE_LOWERCASE}:${IMAGE_TAG_TO_PULL}"
+            export CONTAINER_NAME="user-hub-app"
+            export HOST_PORT="81" # 为 user_hub 分配一个新的、未被占用的端口
+            export DOCKER_NETWORK_NAME="doer_infra_doer_xyz_dev_network"
+
+            echo "登录 GHCR..."
+            docker login ghcr.io -u ${{ secrets.CVM_GH_USERNAME }} -p ${{ secrets.GHCR_PAT_FOR_CVM }}
+
+            echo "拉取镜像: ${IMAGE_TO_PULL_FULL_NAME}"
+            docker pull ${IMAGE_TO_PULL_FULL_NAME}
+
+            echo "停止并删除旧容器 (如果存在)..."
+            docker stop ${CONTAINER_NAME} || true
+            docker rm ${CONTAINER_NAME} || true
+
+            echo "启动新容器并注入 user_hub 的生产环境变量..."
+            docker run -d \
+              -p ${HOST_PORT}:${{ env.APP_CONTAINER_PORT }} \
+              --name ${CONTAINER_NAME} \
+              --network ${DOCKER_NETWORK_NAME} \
+              -e ZAPCONFIG_LEVEL="info" \
+              -e GORMLOGCONFIG_LEVEL="warn" \
+              -e TRACERCONFIG_ENABLED="false" \
+              -e JWTCONFIG_SECRET_KEY="${{ secrets.PROD_JWT_SECRET_KEY }}" \
+              -e JWTCONFIG_REFRESH_SECRET="${{ secrets.PROD_JWT_REFRESH_SECRET }}" \
+              -e MYSQLCONFIG_DSN="root:root@tcp(mysql-primary:3306)/doer_userHub?charset=utf8mb4&parseTime=true&loc=Local" \
+              -e REDISCONFIG_ADDRESS="redis" \
+              -e REDISCONFIG_PASSWORD="root" \
+              -e WECHATCONFIG_APPID="${{ secrets.PROD_WECHAT_APPID }}" \
+              -e WECHATCONFIG_SECRET="${{ secrets.PROD_WECHAT_SECRET }}" \
+              -e COSCONFIG_SECRET_ID="${{ secrets.PROD_COS_SECRET_ID }}" \
+              -e COSCONFIG_SECRET_KEY="${{ secrets.PROD_COS_SECRET_KEY }}" \
+              -e COSCONFIG_BUCKET_NAME="doer-user-hub" \
+              -e COSCONFIG_APP_ID="1258994983" \
+              -e COSCONFIG_REGION="ap-guangzhou" \
+              -e COSCONFIG_BASE_URL="https://doer-user-hub-1258994983.cos.ap-guangzhou.myqcloud.com" \
+              -e COOKIECONFIG_SECURE="true" \
+              -e COOKIECONFIG_DOMAIN="${{ secrets.PROD_COOKIE_DOMAIN || '' }}" \
+              -e COOKIECONFIG_REFRESH_TOKEN_NAME="prod_rt" \
+              ${IMAGE_TO_PULL_FULL_NAME}
+
+            echo "部署成功! User Hub 应用正在 CVM 的 ${HOST_PORT} 端口上运行。"
+            sleep 10
+            echo "查看 User Hub 容器最新日志:"
+            docker logs --tail 50 ${CONTAINER_NAME}

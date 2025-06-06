@@ -1,0 +1,6 @@
+.git
+*.md
+bin
+*.log
+.env
+config/config.production.yaml

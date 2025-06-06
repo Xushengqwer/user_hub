@@ -1,0 +1,54 @@
+# E:/Doer_xyz/user_hub/docker-compose.yml
+# version: "3.8" # 移除此行，根据警告信息，它已过时
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: user_hub_db_mysql_local_dev # 稍微修改容器名以区分
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "doer_userHub" # 确保这个数据库会被创建
+    ports:
+      # 将容器的 3306 端口映射到宿主机的 3306 端口
+      # 这样本地 Go 应用可以直接连接 localhost:3306
+      - "3306:3306"
+    volumes:
+      - mysql_data_local_dev:/var/lib/mysql # 使用不同的卷名以避免与之前的冲突
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - user_hub_dev_network # 使用独立的开发网络
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: user_hub_cache_redis_local_dev # 稍微修改容器名
+    command: redis-server --requirepass root
+    ports:
+      # 将容器的 6379 端口映射到宿主机的 6379 端口
+      # 这样本地 Go 应用可以直接连接 localhost:6379
+      - "6379:6379"
+    volumes:
+      - redis_data_local_dev:/data # 使用不同的卷名
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "root", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - user_hub_dev_network # 使用独立的开发网络
+
+volumes:
+  mysql_data_local_dev: # 确保卷名与上面一致
+    driver: local
+  redis_data_local_dev: # 确保卷名与上面一致
+    driver: local
+
+networks:
+  user_hub_dev_network: # 确保网络名与上面一致
+    driver: bridge
