@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -49,108 +48,12 @@ func main() {
 		log.Fatalf("FATAL: 加载配置失败 (%s): %v", configFile, err)
 	}
 
-	// --- 手动从环境变量覆盖关键配置 (生产环境部署核心) ---
-	log.Println("检查环境变量以覆盖 User Hub 的文件配置...")
-
-	// Server & Log
-	if port := os.Getenv("SERVERCONFIG_PORT"); port != "" {
-		cfg.ServerConfig.Port = port
-		log.Printf("通过环境变量覆盖了 ServerConfig.Port: %s\n", port)
+	// --- [新增] 打印最终生效的配置以供调试 ---
+	configBytes, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		log.Fatalf("无法序列化配置以进行打印: %v", err)
 	}
-	if level := os.Getenv("ZAPCONFIG_LEVEL"); level != "" {
-		cfg.ZapConfig.Level = level
-		log.Printf("通过环境变量覆盖了 ZapConfig.Level: %s\n", level)
-	}
-	if level := os.Getenv("GORMLOGCONFIG_LEVEL"); level != "" {
-		cfg.GormLogConfig.Level = level
-		log.Printf("通过环境变量覆盖了 GormLogConfig.Level: %s\n", level)
-	}
-	// Tracer
-	if enabled, err := strconv.ParseBool(os.Getenv("TRACERCONFIG_ENABLED")); err == nil {
-		cfg.TracerConfig.Enabled = enabled
-		log.Printf("通过环境变量覆盖了 TracerConfig.Enabled: %t\n", enabled)
-	}
-	// JWT
-	if key := os.Getenv("JWTCONFIG_SECRET_KEY"); key != "" {
-		cfg.JWTConfig.SecretKey = key
-		log.Printf("通过环境变量覆盖了 JWTConfig.SecretKey\n")
-	}
-	if key := os.Getenv("JWTCONFIG_REFRESH_SECRET"); key != "" {
-		cfg.JWTConfig.RefreshSecret = key
-		log.Printf("通过环境变量覆盖了 JWTConfig.RefreshSecret\n")
-	}
-	// MySQL & Redis
-	if dsn := os.Getenv("MYSQLCONFIG_DSN"); dsn != "" {
-		cfg.MySQLConfig.DSN = dsn
-		log.Printf("通过环境变量覆盖了 MySQLConfig.DSN\n")
-	}
-	if redisAddrWithPort := os.Getenv("REDISCONFIG_ADDRESS"); redisAddrWithPort != "" {
-		host, portStr, err := net.SplitHostPort(redisAddrWithPort)
-		if err != nil {
-			log.Printf("警告: 无法解析 REDISCONFIG_ADDRESS 环境变量 '%s'，将回退到文件配置: %v\n", redisAddrWithPort, err)
-		} else {
-			port, err := strconv.Atoi(portStr)
-			if err != nil {
-				log.Printf("警告: 无法将 Redis 端口 '%s' 从环境变量中转换为整数，将回退到文件配置: %v\n", portStr, err)
-			} else {
-				cfg.RedisConfig.Address = host
-				cfg.RedisConfig.Port = port
-				log.Printf("通过环境变量覆盖了 Redis 连接: Host=%s, Port=%d\n", host, port)
-			}
-		}
-	}
-	if pass := os.Getenv("REDISCONFIG_PASSWORD"); pass != "" {
-		cfg.RedisConfig.Password = pass
-		log.Printf("通过环境变量覆盖了 RedisConfig.Password\n")
-	}
-	// WeChat
-	if id := os.Getenv("WECHATCONFIG_APPID"); id != "" {
-		cfg.WechatConfig.AppID = id
-		log.Printf("通过环境变量覆盖了 WechatConfig.AppID\n")
-	}
-	if secret := os.Getenv("WECHATCONFIG_SECRET"); secret != "" {
-		cfg.WechatConfig.Secret = secret
-		log.Printf("通过环境变量覆盖了 WechatConfig.Secret\n")
-	}
-	// COS
-	if id := os.Getenv("COSCONFIG_SECRET_ID"); id != "" {
-		cfg.COSConfig.SecretID = id
-		log.Printf("通过环境变量覆盖了 CosConfig.SecretId\n")
-	}
-	if key := os.Getenv("COSCONFIG_SECRET_KEY"); key != "" {
-		cfg.COSConfig.SecretKey = key
-		log.Printf("通过环境变量覆盖了 CosConfig.SecretKey\n")
-	}
-	if name := os.Getenv("COSCONFIG_BUCKET_NAME"); name != "" {
-		cfg.COSConfig.BucketName = name
-		log.Printf("通过环境变量覆盖了 CosConfig.BucketName: %s\n", name)
-	}
-	if id := os.Getenv("COSCONFIG_APP_ID"); id != "" {
-		cfg.COSConfig.AppID = id
-		log.Printf("通过环境变量覆盖了 CosConfig.AppId: %s\n", id)
-	}
-	if region := os.Getenv("COSCONFIG_REGION"); region != "" {
-		cfg.COSConfig.Region = region
-		log.Printf("通过环境变量覆盖了 CosConfig.Region: %s\n", region)
-	}
-	if url := os.Getenv("COSCONFIG_BASE_URL"); url != "" {
-		cfg.COSConfig.BaseURL = url
-		log.Printf("通过环境变量覆盖了 CosConfig.BaseURL: %s\n", url)
-	}
-	// Cookie
-	if secure, err := strconv.ParseBool(os.Getenv("COOKIECONFIG_SECURE")); err == nil {
-		cfg.CookieConfig.Secure = secure
-		log.Printf("通过环境变量覆盖了 CookieConfig.Secure: %t\n", secure)
-	}
-	if domain := os.Getenv("COOKIECONFIG_DOMAIN"); domain != "" {
-		cfg.CookieConfig.Domain = domain
-		log.Printf("通过环境变量覆盖了 CookieConfig.Domain: %s\n", domain)
-	}
-	if name := os.Getenv("COOKIECONFIG_REFRESH_TOKEN_NAME"); name != "" {
-		cfg.CookieConfig.RefreshTokenName = name
-		log.Printf("通过环境变量覆盖了 CookieConfig.RefreshTokenName: %s\n", name)
-	}
-	// --- 结束环境变量覆盖 ---
+	log.Printf("✅ 配置加载成功！最终生效的配置如下:\n%s\n", string(configBytes))
 
 	// 2. 初始化 Logger
 	logger, loggerErr := sharedCore.NewZapLogger(cfg.ZapConfig)

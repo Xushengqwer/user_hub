@@ -3,7 +3,7 @@ module github.com/Xushengqwer/user_hub
 go 1.23.7
 
 require (
-	github.com/Xushengqwer/go-common v0.0.0-20250531061714-4a1c3bf024f7
+	github.com/Xushengqwer/go-common v0.0.0-20250609053903-e9d21127601b
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-jwt/jwt/v5 v5.2.2

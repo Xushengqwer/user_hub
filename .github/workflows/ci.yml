@@ -16,7 +16,8 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image_tag_short_sha: ${{ steps.extract_sha_tag.outputs.sha_tag }}
+      # [优化] 直接使用 meta action 的输出来传递 tag，更简洁
+      image_tag_short_sha: ${{ steps.meta.outputs.version }}
 
     steps:
       - name: Checkout code
@@ -36,13 +37,16 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
+          # [优化] 使用 github.repository (user_hub) 作为镜像名的一部分
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=sha,format=short,prefix=
+            type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
+          # [优化] 'version' 输出会是 short sha，可以直接在下一个 job 使用
+          flavor:
+            latest=false
 
       - name: Build and push Docker image to GHCR
-        id: build_push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -52,17 +56,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Extract short SHA tag from metadata
-        id: extract_sha_tag
-        run: |
-          TAGS="${{ steps.meta.outputs.tags }}"
-          SHA_TAG=$(echo "$TAGS" | tr ',' '\n' | grep -v 'latest' | grep "ghcr.io/${{ github.repository }}:" | head -n 1 | sed 's/.*://')
-          if [ -z "$SHA_TAG" ]; then
-            echo "Falling back to truncated github.sha"
-            SHA_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
-          fi
-          echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
 
   deploy-to-cvm:
     name: Deploy User Hub to Tencent Cloud CVM
@@ -89,16 +82,18 @@ jobs:
             export DOCKER_NETWORK_NAME="doer_infra_doer_xyz_dev_network"
 
             echo "登录 GHCR..."
-            docker login ghcr.io -u ${{ secrets.CVM_GH_USERNAME }} -p ${{ secrets.GHCR_PAT_FOR_CVM }}
+            # [优化] 使用 password-stdin 方式登录，更安全
+            echo "${{ secrets.GHCR_PAT_FOR_CVM }}" | docker login ghcr.io -u ${{ secrets.CVM_GH_USERNAME }} --password-stdin
 
             echo "拉取镜像: ${IMAGE_TO_PULL_FULL_NAME}"
             docker pull ${IMAGE_TO_PULL_FULL_NAME}
 
             echo "停止并删除旧容器 (如果存在)..."
-            docker stop ${CONTAINER_NAME} || true
-            docker rm ${CONTAINER_NAME} || true
+            docker stop ${CONTAINER_NAME} >/dev/null 2>&1 || true
+            docker rm ${CONTAINER_NAME} >/dev/null 2>&1 || true
 
             echo "启动新容器并注入 user_hub 的生产环境变量..."
+            # [核心修正] 在 docker run 命令的最后，增加了 -config 参数
             docker run -d \
               -p ${HOST_PORT}:${{ env.APP_CONTAINER_PORT }} \
               --name ${CONTAINER_NAME} \
@@ -123,7 +118,8 @@ jobs:
               -e COOKIECONFIG_SECURE="true" \
               -e COOKIECONFIG_DOMAIN="${{ secrets.PROD_COOKIE_DOMAIN || '' }}" \
               -e COOKIECONFIG_REFRESH_TOKEN_NAME="prod_rt" \
-              ${IMAGE_TO_PULL_FULL_NAME}
+              ${IMAGE_TO_PULL_FULL_NAME} \
+              -config /app/config/config.development.yaml
 
             echo "部署成功! User Hub 应用正在 CVM 的 ${HOST_PORT} 端口上运行。"
             sleep 10
