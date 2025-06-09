@@ -65,15 +65,15 @@ smsConfig:
 
 
   # Tencent Cloud Object Storage (COS) 配置
-  cosConfig:
-    secret_id: "" # 您的真实 SecretId
-    secret_key: "" # 您的真实 SecretKey (生产环境建议从环境变量读取)
-    bucket_name: ""
-    app_id: ""
-    region: ""
+cosConfig:
+  secret_id: "" # 您的真实 SecretId
+  secret_key: "" # 您的真实 SecretKey (生产环境建议从环境变量读取)
+  bucket_name: ""
+  app_id: ""
+  region: ""
     # 对于“公有读、私有写”的桶，BaseURL 可以是COS提供的默认存储桶域名
     # 或者您配置的CDN域名（如果使用了CDN）
-    base_url: ""
+  base_url: ""
 
 
 cookieConfig:
