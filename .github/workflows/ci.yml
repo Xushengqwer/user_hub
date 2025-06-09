@@ -119,7 +119,6 @@ jobs:
               -e COOKIECONFIG_DOMAIN="${{ secrets.PROD_COOKIE_DOMAIN || '' }}" \
               -e COOKIECONFIG_REFRESH_TOKEN_NAME="prod_rt" \
               ${IMAGE_TO_PULL_FULL_NAME} \
-              -config /app/config/config.development.yaml
 
             echo "部署成功! User Hub 应用正在 CVM 的 ${HOST_PORT} 端口上运行。"
             sleep 10
