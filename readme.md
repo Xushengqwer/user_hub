@@ -4,6 +4,12 @@
 
 User Hub 是一个用户中心服务，提供用户账户管理、认证、资料管理等功能。它支持多种登录方式，包括账号密码、手机验证码和微信小程序登录。该项目采用 Go 语言编写，使用了 Gin Web 框架，并集成了 MySQL 和 Redis 作为数据存储和缓存。
 
+## 架构图 (Architecture Diagram)
+
+项目的功能流转架构图如下所示。
+
+![User Hub Architecture](assets/capture_20250610133655186.png)
+
 ## 功能特性
 
 * **用户认证**：

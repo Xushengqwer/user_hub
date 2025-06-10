@@ -85,7 +85,8 @@ jobs:
             export IMAGE_TO_PULL_FULL_NAME="${GHCR_IMAGE_BASE_LOWERCASE}:${IMAGE_TAG_TO_PULL}"
             export CONTAINER_NAME="user-hub-app"
             export HOST_PORT="81"
-            export DOCKER_NETWORK_NAME="doer_infra_doer_xyz_dev_network"
+            export DOCKER_NETWORK_NAME="doer_project_doer_xyz_dev_network"
+
 
             echo "登录 GHCR..."
             echo "${{ secrets.GHCR_PAT_FOR_CVM }}" | docker login ghcr.io -u ${{ secrets.CVM_GH_USERNAME }} --password-stdin
